@@ -2,32 +2,46 @@
 
 @layer base {
   body {
-    @apply bg-gray-100 text-gray-800 antialiased;
-    /* bg-gray-100 é o equivalente ao var(--light-gray) do original */
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  /* Melhorar visibilidade de todos os inputs e selects */
+  input, select, textarea {
+    @apply border-gray-300 bg-white text-gray-900 shadow-sm transition-all duration-200;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    @apply border-green-500 ring-2 ring-green-100 outline-none;
+  }
+  
+  /* Garantir que labels sejam legíveis */
+  label {
+    @apply font-semibold text-gray-700;
   }
 }
 
-/* Personalização da Scrollbar (Copiado do seu style.css original) */
+/* Scrollbar personalizada mais elegante */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #cbd5e1; /* gray-300 */
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: #94a3b8; /* gray-400 */
 }
 
-/* Utilitário para animação de entrada suave */
+/* Animações */
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }

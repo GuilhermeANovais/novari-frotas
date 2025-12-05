@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependências (Obrigatório ignorar)
 node_modules
 dist
 dist-ssr
@@ -18,7 +19,21 @@ dist-ssr
 .idea
 .DS_Store
 *.suo
-*.ntvs*
+*.ntvs
 *.njsproj
 *.sln
 *.sw?
+
+# Variáveis de Ambiente (CRÍTICO: nunca enviar para o GitHub)
+.env
+.env.*
+!.env.example
+
+# Firebase cache
+.firebase/
+
+# Testes
+coverage/
+
+# Vite temp files
+*.timestamp-*

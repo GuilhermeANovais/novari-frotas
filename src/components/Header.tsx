@@ -167,8 +167,8 @@ export function Header() {
             Relatórios
           </Link>
 
-          <div className="flex flex-col items-end mr-2">
-             <span className="text-sm font-semibold text-gray-700">
+          <div className="hidden md:flex flex-col items-end mr-4">
+             <span className="text-sm font-bold text-gray-700">
                {userProfile?.role === 'admin' ? 'Administrador' : userProfile?.department || 'Utilizador'}
              </span>
              <span className="text-xs text-gray-500 truncate max-w-[150px]">
@@ -178,8 +178,8 @@ export function Header() {
 
           <button
             onClick={logout}
-            className="bg-danger hover:bg-danger-hover text-white font-bold py-2 px-4 rounded-lg transition-all shadow flex items-center"
-            title="Sair"
+            className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors shadow-sm flex items-center justify-center"
+            title="Sair do Sistema"
           >
             <LogOut className="w-5 h-5" />
           </button>

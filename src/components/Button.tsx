@@ -17,18 +17,23 @@ export const Button = ({
   ...props 
 }: ButtonProps) => {
   const variants = {
-    primary: "bg-primary hover:bg-primary-hover text-white",
-    danger: "bg-danger hover:bg-danger-hover text-white",
-    outline: "bg-transparent border border-gray-300 hover:bg-gray-50 text-gray-700"
+    // Usando cores padrão do Tailwind (green-600/700) para garantir visibilidade
+    primary: "bg-green-600 hover:bg-green-700 text-white shadow-sm border border-transparent focus:ring-green-500",
+    
+    // Vermelho padrão para perigo
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm border border-transparent focus:ring-red-500",
+    
+    // Outline com fundo branco para não ficar transparente sobre fundos cinzas
+    outline: "bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 shadow-sm focus:ring-gray-500"
   };
 
   return (
     <button
       disabled={disabled || isLoading}
       className={clsx(
-        "w-full font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center",
+        "w-full font-bold py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2",
         variants[variant],
-        (disabled || isLoading) && "opacity-70 cursor-not-allowed",
+        (disabled || isLoading) && "opacity-60 cursor-not-allowed grayscale",
         className
       )}
       {...props}

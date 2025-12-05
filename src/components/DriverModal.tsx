@@ -5,6 +5,8 @@ import { Input } from './Input';
 import { Driver } from '../types';
 import { db } from '../services/firebase';
 import { collection, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { logActivity } from '../services/logger';
+import { toast } from 'sonner';
 
 interface DriverModalProps {
   isOpen: boolean;
@@ -54,23 +56,22 @@ export function DriverModal({
     setLoading(true);
 
     try {
-      const driverData = {
-        ...formData,
-        department
-      };
+      const driverData = { ...formData, department };
 
       if (driverToEdit) {
-        // Editar existente
         await updateDoc(doc(db, 'drivers', driverToEdit.id), driverData);
+        await logActivity('update_driver', `Motorista atualizado: ${driverData.name}`, department, driverToEdit.id);
+        toast.success(`Motorista ${driverData.name} atualizado!`);
       } else {
-        // Criar novo
-        await addDoc(collection(db, 'drivers'), driverData);
+        const docRef = await addDoc(collection(db, 'drivers'), driverData);
+        await logActivity('create_driver', `Motorista criado: ${driverData.name}`, department, docRef.id);
+        toast.success(`Motorista ${driverData.name} cadastrado!`);
       }
 
       onClose();
     } catch (error) {
       console.error("Erro ao salvar motorista:", error);
-      alert("Erro ao salvar. Verifique o console.");
+      toast.error("Erro ao salvar. Verifique o console.");
     } finally {
       setLoading(false);
     }
@@ -83,51 +84,17 @@ export function DriverModal({
       title={driverToEdit ? 'Editar Motorista' : `Adicionar Motorista em ${department}`}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Input 
-          name="name" 
-          label="Nome Completo" 
-          value={formData.name} 
-          onChange={handleChange} 
-          required 
-          placeholder="Nome do motorista" 
-        />
-        
-        <Input 
-          name="licenseNumber" 
-          label="Número da CNH" 
-          value={formData.licenseNumber} 
-          onChange={handleChange} 
-          required 
-          placeholder="Número de registo" 
-        />
+        <Input name="name" label="Nome Completo" value={formData.name} onChange={handleChange} required placeholder="Nome do motorista" />
+        <Input name="licenseNumber" label="Número da CNH" value={formData.licenseNumber} onChange={handleChange} required placeholder="Número de registo" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input 
-            name="licenseCategory" 
-            label="Categoria" 
-            value={formData.licenseCategory} 
-            onChange={handleChange} 
-            required 
-            placeholder="Ex: AB, D, E" 
-          />
-          
-          <Input 
-            name="licenseExpiration" 
-            label="Validade da CNH" 
-            type="date"
-            value={formData.licenseExpiration} 
-            onChange={handleChange} 
-            required 
-          />
+          <Input name="licenseCategory" label="Categoria" value={formData.licenseCategory} onChange={handleChange} required placeholder="Ex: AB, D, E" />
+          <Input name="licenseExpiration" label="Validade da CNH" type="date" value={formData.licenseExpiration} onChange={handleChange} required />
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button type="submit" isLoading={loading}>
-            {driverToEdit ? 'Salvar Alterações' : 'Adicionar Motorista'}
-          </Button>
+          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>Cancelar</Button>
+          <Button type="submit" isLoading={loading}>{driverToEdit ? 'Salvar Alterações' : 'Adicionar Motorista'}</Button>
         </div>
       </form>
     </Modal>

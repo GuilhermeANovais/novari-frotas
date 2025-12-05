@@ -3,11 +3,11 @@ import { useAuth, AuthProvider } from "./contexts/AuthContext";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { DepartmentDetails } from "./pages/DepartmentDetails";
+import { Reports } from "./pages/Reports";
 import { Header } from "./components/Header";
 import { Loader2 } from "lucide-react";
-import { Reports } from "./pages/Reports";
+import { Toaster } from 'sonner'; // <--- Importar Sonner
 
-// Componente para proteger rotas privadas (Dashboard, Detalhes, etc.)
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
 
@@ -36,79 +36,24 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   );
 }
 
-// Componente para rotas públicas (Login)
-// Se o usuário já estiver logado, redireciona para o Dashboard
 function PublicRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return null; // Ou um spinner, mas geralmente é muito rápido
-  }
-
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
   return children;
 }
 
 export default function App() {
   return (
     <AuthProvider>
+      {/* Configuração Global do Toast */}
+      <Toaster richColors position="top-right" expand={true} />
+      
       <Routes>
-        {/* Rota de Login (Pública) */}
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } 
-        />
-        
-        {/* Rota Dashboard (Privada - Raiz) */}
-        <Route 
-          path="/" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
-
-        {/* Rota de Detalhes do Departamento (Privada) */}
-        <Route 
-          path="/departamentos/:nome" 
-          element={
-            <PrivateRoute>
-              <DepartmentDetails />
-            </PrivateRoute>
-          } 
-        />
-
-        <Route
-          path="/relatorios"
-          element={
-            <PrivateRoute>
-              <Reports />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Rota de Relatórios (Placeholder Futuro) */}
-        <Route 
-          path="/relatorios" 
-          element={
-            <PrivateRoute>
-               <div className="p-8 text-center text-gray-500">
-                 <h2 className="text-xl font-bold mb-2">Relatórios</h2>
-                 <p>Módulo de relatórios em desenvolvimento.</p>
-               </div>
-            </PrivateRoute>
-          } 
-        />
-
-        {/* Rota Catch-all (Qualquer URL desconhecida redireciona para o início) */}
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/departamentos/:nome" element={<PrivateRoute><DepartmentDetails /></PrivateRoute>} />
+        <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

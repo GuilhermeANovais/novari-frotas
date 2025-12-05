@@ -7,13 +7,15 @@ import { Vehicle, Driver } from '../types';
 import { db, storage } from '../services/firebase';
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { logActivity } from '../services/logger';
+import { toast } from 'sonner'; // <--- Importar Toast
 
 interface VehicleModalProps {
   isOpen: boolean;
   onClose: () => void;
   department: string;
-  vehicleToEdit?: Vehicle | null; // Se for nulo, é modo de criação
-  drivers: Driver[]; // Lista para o select box
+  vehicleToEdit?: Vehicle | null;
+  drivers: Driver[];
 }
 
 const INITIAL_FORM_STATE = {
@@ -44,7 +46,6 @@ export function VehicleModal({
   const [imagePreview, setImagePreview] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  // Preenche o formulário ao abrir para edição
   useEffect(() => {
     if (isOpen) {
       if (vehicleToEdit) {
@@ -96,17 +97,10 @@ export function VehicleModal({
 
     try {
       let imageUrl = vehicleToEdit?.imageUrl || '';
-
-      // 1. Upload da Imagem (se houver nova)
-      if (imageFile) {
-         // Se estamos editando e já tinha imagem, idealmente deletaríamos a antiga,
-         // mas para simplificar, vamos apenas fazer upload da nova.
-         // O ID do documento é necessário para o caminho, então se for criação, geramos antes.
-      }
-
+      
       const vehicleData = {
         ...formData,
-        department, // Força o departamento atual
+        department,
         ano: Number(formData.ano),
         currentMileage: Number(formData.currentMileage),
         nextChangeMileage: Number(formData.nextChangeMileage),
@@ -115,46 +109,44 @@ export function VehicleModal({
 
       if (vehicleToEdit) {
         // --- MODO EDIÇÃO ---
-        
-        // Se escolheu remover a imagem e não subiu outra
         if (!imagePreview && vehicleToEdit.imageUrl) {
             try {
                 const imageRef = ref(storage, vehicleToEdit.imageUrl);
                 await deleteObject(imageRef);
-            } catch (err) { console.error("Erro ao deletar imagem antiga", err); }
+            } catch (err) { console.warn("Erro ao deletar imagem antiga", err); }
             imageUrl = '';
         }
 
-        // Upload da nova imagem se existir
         if (imageFile) {
             const storageRef = ref(storage, `vehicle_images/${vehicleToEdit.id}/${imageFile.name}`);
             await uploadBytes(storageRef, imageFile);
             imageUrl = await getDownloadURL(storageRef);
         }
 
-        await updateDoc(doc(db, 'vehicles', vehicleToEdit.id), {
-            ...vehicleData,
-            imageUrl
-        });
+        await updateDoc(doc(db, 'vehicles', vehicleToEdit.id), { ...vehicleData, imageUrl });
+        
+        await logActivity('update_vehicle', `Veículo atualizado: ${vehicleData.licensePlate}`, department, vehicleToEdit.id);
+        toast.success(`Veículo ${vehicleData.licensePlate} atualizado com sucesso!`);
 
       } else {
         // --- MODO CRIAÇÃO ---
-        // Primeiro cria o doc para ter o ID
         const docRef = await addDoc(collection(db, 'vehicles'), vehicleData);
         
         if (imageFile) {
             const storageRef = ref(storage, `vehicle_images/${docRef.id}/${imageFile.name}`);
             await uploadBytes(storageRef, imageFile);
             imageUrl = await getDownloadURL(storageRef);
-            // Atualiza com a URL
             await updateDoc(docRef, { imageUrl });
         }
+
+        await logActivity('create_vehicle', `Veículo criado: ${vehicleData.licensePlate}`, department, docRef.id);
+        toast.success(`Veículo ${vehicleData.licensePlate} criado com sucesso!`);
       }
 
-      onClose(); // Fecha o modal
+      onClose();
     } catch (error) {
       console.error("Erro ao salvar veículo:", error);
-      alert("Erro ao salvar. Verifique o console.");
+      toast.error("Erro ao salvar veículo. Verifique o console.");
     } finally {
       setLoading(false);
     }
@@ -167,7 +159,6 @@ export function VehicleModal({
       title={vehicleToEdit ? `Editar Veículo - ${vehicleToEdit.licensePlate}` : `Novo Veículo em ${department}`}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        
         {/* Área de Imagem */}
         <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
           {imagePreview ? (
@@ -176,13 +167,13 @@ export function VehicleModal({
               <button 
                 type="button" 
                 onClick={removeImage}
-                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <label className="cursor-pointer flex flex-col items-center">
+            <label className="cursor-pointer flex flex-col items-center hover:bg-gray-100 p-4 rounded-md transition-colors w-full">
               <Upload className="w-8 h-8 text-gray-400 mb-2" />
               <span className="text-sm text-gray-500">Clique para adicionar foto</span>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
@@ -190,7 +181,7 @@ export function VehicleModal({
           )}
         </div>
 
-        {/* Campos Principais */}
+        {/* Campos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input name="licensePlate" label="Placa" value={formData.licensePlate} onChange={handleChange} required placeholder="ABC-1234" />
           <Input name="model" label="Modelo" value={formData.model} onChange={handleChange} required placeholder="Ex: Fiat Toro" />
@@ -227,7 +218,6 @@ export function VehicleModal({
            </div>
         </div>
 
-        {/* Detalhes Técnicos (Colapsáveis ou Grid) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
            <Input name="cor" label="Cor" value={formData.cor} onChange={handleChange} />
            <Input name="ano" label="Ano" type="number" value={formData.ano} onChange={handleChange} />
@@ -252,7 +242,6 @@ export function VehicleModal({
             ></textarea>
         </div>
 
-        {/* Rodapé de Ações */}
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
             Cancelar

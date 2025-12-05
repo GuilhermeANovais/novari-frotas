@@ -11,8 +11,17 @@ import { ActivityLogs } from '../components/ActivityLogs';
 import { Vehicle, Driver } from '../types';
 import { 
   ArrowLeft, Plus, Search, Car, User, 
-  AlertTriangle, CheckCircle, Clock, History 
+  AlertTriangle, CheckCircle, Clock, History, Trash2 
 } from 'lucide-react';
+
+// Imports para funcionalidade de Exclusão e Feedback
+import { 
+  collection, doc, deleteDoc, writeBatch, getDocs 
+} from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
+import { db, storage } from '../services/firebase';
+import { logActivity } from '../services/logger';
+import { toast } from 'sonner';
 
 // Utilitário para formatar datas (ex: 2023-10-05 -> 05/10/2023)
 const formatDate = (dateStr?: string) => {
@@ -28,15 +37,13 @@ export function DepartmentDetails() {
   // --- Estados de Interface ---
   const [activeTab, setActiveTab] = useState<'vehicles' | 'drivers' | 'logs'>('vehicles');
   
-  // Estados do Modal de Veículo
+  // Estados dos Modais
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
 
-  // Estados do Modal de Motorista
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
 
-  // Estados do Modal de Manutenção
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [maintenanceVehicle, setMaintenanceVehicle] = useState<Vehicle | null>(null);
 
@@ -49,7 +56,7 @@ export function DepartmentDetails() {
   const { vehicles, loading: loadingVehicles } = useVehicles(departmentName);
   const { drivers, loading: loadingDrivers } = useDrivers(departmentName);
 
-  // --- Funções Auxiliares: Veículos ---
+  // --- Handlers de Abertura de Modal ---
   const handleOpenCreateVehicle = () => {
     setEditingVehicle(null); // Modo criação
     setIsVehicleModalOpen(true);
@@ -65,7 +72,6 @@ export function DepartmentDetails() {
     setIsMaintenanceModalOpen(true);
   };
 
-  // --- Funções Auxiliares: Motoristas ---
   const handleOpenCreateDriver = () => {
     setEditingDriver(null); // Modo criação
     setIsDriverModalOpen(true);
@@ -76,7 +82,71 @@ export function DepartmentDetails() {
     setIsDriverModalOpen(true);
   };
 
-  // --- Lógica de Filtragem de Veículos ---
+  // --- Lógica de Exclusão (Segurança) ---
+  const handleDeleteVehicle = async (vehicle: Vehicle) => {
+    const confirmMessage = `ATENÇÃO: Você está prestes a excluir o veículo ${vehicle.licensePlate}.\n\nIsso apagará também todo o histórico de manutenções e a foto.\n\nTem certeza absoluta?`;
+    
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      // 1. Apagar subcoleção de manutenções
+      const batch = writeBatch(db);
+      const maintenanceSnap = await getDocs(collection(db, 'vehicles', vehicle.id, 'maintenanceRecords'));
+      maintenanceSnap.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
+      // 2. Apagar imagem do Storage (se existir)
+      if (vehicle.imageUrl) {
+        try {
+          const imageRef = ref(storage, vehicle.imageUrl);
+          await deleteObject(imageRef);
+        } catch (err) {
+          console.warn("Imagem já não existia ou erro ao apagar:", err);
+        }
+      }
+
+      // 3. Apagar o documento do veículo
+      await deleteDoc(doc(db, 'vehicles', vehicle.id));
+
+      // 4. Log de Auditoria
+      await logActivity(
+        'delete_vehicle', 
+        `Veículo excluído: ${vehicle.licensePlate} (${vehicle.model})`, 
+        vehicle.department, 
+        vehicle.id
+      );
+
+      toast.success(`Veículo ${vehicle.licensePlate} excluído com sucesso.`);
+
+    } catch (error) {
+      console.error("Erro ao excluir veículo:", error);
+      toast.error("Ocorreu um erro ao tentar excluir.");
+    }
+  };
+
+  const handleDeleteDriver = async (driver: Driver) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o motorista ${driver.name}?`)) return;
+
+    try {
+      await deleteDoc(doc(db, 'drivers', driver.id));
+      
+      await logActivity(
+        'delete_driver', 
+        `Motorista excluído: ${driver.name}`, 
+        driver.department, 
+        driver.id
+      );
+
+      toast.success(`Motorista ${driver.name} excluído.`);
+    } catch (error) {
+      console.error("Erro ao excluir motorista:", error);
+      toast.error("Erro ao excluir motorista.");
+    }
+  };
+
+  // --- Lógica de Filtros e Status ---
   const getVehicleStatus = (dateStr?: string) => {
     if (!dateStr) return 'ok';
     const lastReview = new Date(dateStr + 'T00:00:00');
@@ -105,7 +175,6 @@ export function DepartmentDetails() {
     return matchesSearch && matchesSituation && matchesStatus;
   });
 
-  // --- Lógica de Filtragem de Motoristas ---
   const getDriverStatus = (dateStr?: string) => {
     if (!dateStr) return 'ok';
     const expiration = new Date(dateStr + 'T00:00:00');
@@ -312,21 +381,25 @@ export function DepartmentDetails() {
                     </div>
                   </div>
                 </div>
-
+                
                 {/* Rodapé de Ações */}
-                <div className="bg-gray-50 p-3 border-t border-gray-100 flex justify-end gap-3">
+                <div className="bg-gray-50 p-3 border-t border-gray-100 flex justify-between items-center">
                   <button 
-                    onClick={() => handleOpenEditVehicle(vehicle)}
-                    className="text-sm font-semibold text-primary hover:text-green-700 hover:underline px-2 py-1 rounded transition-colors"
+                    onClick={() => handleDeleteVehicle(vehicle)}
+                    className="text-gray-500 hover:text-white hover:bg-red-600 transition-colors p-2 rounded-md"
+                    title="Excluir Veículo"
                   >
-                    Editar
+                    <Trash2 className="w-4 h-4" />
                   </button>
-                  <button 
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline px-2 py-1 rounded transition-colors"
-                    onClick={() => handleOpenMaintenance(vehicle)}
-                  >
-                    Custos
-                  </button>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => handleOpenEditVehicle(vehicle)} className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors">
+                      Editar
+                    </button>
+                    <button onClick={() => handleOpenMaintenance(vehicle)} className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                      Custos
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -374,12 +447,22 @@ export function DepartmentDetails() {
                         {formatDate(driver.licenseExpiration)}
                      </span>
                   </div>
-                  <button 
-                     onClick={() => handleOpenEditDriver(driver)}
-                     className="text-primary hover:text-green-800 font-medium hover:underline"
-                  >
-                     Editar
-                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => handleDeleteDriver(driver)}
+                      className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                      title="Excluir Motorista"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <button 
+                       onClick={() => handleOpenEditDriver(driver)}
+                       className="text-primary hover:text-green-800 font-medium hover:underline"
+                    >
+                       Editar
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -387,7 +470,7 @@ export function DepartmentDetails() {
         </div>
       )}
 
-      {/* --- CONTEÚDO DA ABA HISTÓRICO (LOGS) --- */}
+      {/* --- CONTEÚDO: HISTÓRICO (LOGS) --- */}
       {activeTab === 'logs' && (
         <div className="animate-fade-in">
           <ActivityLogs department={departmentName || ''} />
