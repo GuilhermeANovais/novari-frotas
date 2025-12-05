@@ -6,10 +6,12 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { VehicleModal } from '../components/VehicleModal';
 import { DriverModal } from '../components/DriverModal';
+import { MaintenanceModal } from '../components/MaintenanceModal';
+import { ActivityLogs } from '../components/ActivityLogs';
 import { Vehicle, Driver } from '../types';
 import { 
   ArrowLeft, Plus, Search, Car, User, 
-  AlertTriangle, CheckCircle, Clock 
+  AlertTriangle, CheckCircle, Clock, History 
 } from 'lucide-react';
 
 // Utilitário para formatar datas (ex: 2023-10-05 -> 05/10/2023)
@@ -24,7 +26,7 @@ export function DepartmentDetails() {
   const navigate = useNavigate();
   
   // --- Estados de Interface ---
-  const [activeTab, setActiveTab] = useState<'vehicles' | 'drivers'>('vehicles');
+  const [activeTab, setActiveTab] = useState<'vehicles' | 'drivers' | 'logs'>('vehicles');
   
   // Estados do Modal de Veículo
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
@@ -33,6 +35,10 @@ export function DepartmentDetails() {
   // Estados do Modal de Motorista
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
+
+  // Estados do Modal de Manutenção
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+  const [maintenanceVehicle, setMaintenanceVehicle] = useState<Vehicle | null>(null);
 
   // --- Estados dos Filtros ---
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +58,11 @@ export function DepartmentDetails() {
   const handleOpenEditVehicle = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle); // Modo edição
     setIsVehicleModalOpen(true);
+  };
+
+  const handleOpenMaintenance = (vehicle: Vehicle) => {
+    setMaintenanceVehicle(vehicle);
+    setIsMaintenanceModalOpen(true);
   };
 
   // --- Funções Auxiliares: Motoristas ---
@@ -117,7 +128,7 @@ export function DepartmentDetails() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       {/* Cabeçalho e Botão Voltar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-2">
@@ -130,15 +141,19 @@ export function DepartmentDetails() {
           </button>
           <h1 className="text-2xl font-bold text-gray-800">Gestão de {departmentName}</h1>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            className="w-full md:w-auto"
-            onClick={() => activeTab === 'vehicles' ? handleOpenCreateVehicle() : handleOpenCreateDriver()}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Adicionar {activeTab === 'vehicles' ? 'Veículo' : 'Motorista'}
-          </Button>
-        </div>
+        
+        {/* Botão Adicionar (Visível apenas nas abas de Veículos e Motoristas) */}
+        {activeTab !== 'logs' && (
+          <div className="flex gap-2">
+            <Button 
+              className="w-full md:w-auto"
+              onClick={() => activeTab === 'vehicles' ? handleOpenCreateVehicle() : handleOpenCreateDriver()}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Adicionar {activeTab === 'vehicles' ? 'Veículo' : 'Motorista'}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Navegação por Abas */}
@@ -168,61 +183,75 @@ export function DepartmentDetails() {
             <User className="w-5 h-5 mr-2" />
             Motoristas
           </button>
+          <button
+            onClick={() => { setActiveTab('logs'); }}
+            className={`
+              pb-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors
+              ${activeTab === 'logs' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+            `}
+          >
+            <History className="w-5 h-5 mr-2" />
+            Histórico
+          </button>
         </nav>
       </div>
 
-      {/* Barra de Filtros */}
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Campo de Busca */}
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-          <Input 
-            placeholder={activeTab === 'vehicles' ? "Buscar placa ou modelo..." : "Buscar nome do motorista..."}
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      {/* Barra de Filtros (Oculta na aba Histórico) */}
+      {activeTab !== 'logs' && (
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Campo de Busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <Input 
+              placeholder={activeTab === 'vehicles' ? "Buscar placa ou modelo..." : "Buscar nome do motorista..."}
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-        {/* Filtro de Situação (Apenas Veículos) */}
-        {activeTab === 'vehicles' ? (
-          <select 
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white focus:outline-none focus:ring-2"
-            value={situationFilter}
-            onChange={(e) => setSituationFilter(e.target.value)}
-          >
-            <option value="">Todas as Situações</option>
-            <option value="Ativo">Ativo</option>
-            <option value="Em Manutenção">Em Manutenção</option>
-            <option value="Aguardando Peças">Aguardando Peças</option>
-            <option value="Parado">Parado</option>
-          </select>
-        ) : (
-           /* Espaço vazio para manter o grid alinhado na aba de motoristas */
-           <div className="hidden md:block"></div>
-        )}
-
-        {/* Filtro de Status (Revisão/CNH) */}
-        <div className="flex bg-gray-100 p-1 rounded-lg">
-          {[
-            { label: 'Todos', value: '' },
-            { label: activeTab === 'vehicles' ? 'Atrasada' : 'Vencida', value: 'error' },
-            { label: activeTab === 'vehicles' ? 'Próxima' : 'A Vencer', value: 'warning' },
-            { label: 'Em Dia', value: 'ok' }
-          ].map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setStatusFilter(opt.value)}
-              className={`
-                flex-1 text-sm font-medium rounded-md py-1 transition-all
-                ${statusFilter === opt.value ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}
-              `}
+          {/* Filtro de Situação (Apenas Veículos) */}
+          {activeTab === 'vehicles' ? (
+            <select 
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white focus:outline-none focus:ring-2"
+              value={situationFilter}
+              onChange={(e) => setSituationFilter(e.target.value)}
             >
-              {opt.label}
-            </button>
-          ))}
+              <option value="">Todas as Situações</option>
+              <option value="Ativo">Ativo</option>
+              <option value="Em Manutenção">Em Manutenção</option>
+              <option value="Aguardando Peças">Aguardando Peças</option>
+              <option value="Parado">Parado</option>
+            </select>
+          ) : (
+             /* Espaço vazio para manter o grid alinhado na aba de motoristas */
+             <div className="hidden md:block"></div>
+          )}
+
+          {/* Filtro de Status (Revisão/CNH) */}
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            {[
+              { label: 'Todos', value: '' },
+              { label: activeTab === 'vehicles' ? 'Atrasada' : 'Vencida', value: 'error' },
+              { label: activeTab === 'vehicles' ? 'Próxima' : 'A Vencer', value: 'warning' },
+              { label: 'Em Dia', value: 'ok' }
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setStatusFilter(opt.value)}
+                className={`
+                  flex-1 text-sm font-medium rounded-md py-1 transition-all
+                  ${statusFilter === opt.value ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}
+                `}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* --- CONTEÚDO DA ABA VEÍCULOS --- */}
       {activeTab === 'vehicles' && (
@@ -294,7 +323,7 @@ export function DepartmentDetails() {
                   </button>
                   <button 
                     className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline px-2 py-1 rounded transition-colors"
-                    onClick={() => alert("Funcionalidade de Custos será a próxima a ser implementada!")}
+                    onClick={() => handleOpenMaintenance(vehicle)}
                   >
                     Custos
                   </button>
@@ -358,6 +387,13 @@ export function DepartmentDetails() {
         </div>
       )}
 
+      {/* --- CONTEÚDO DA ABA HISTÓRICO (LOGS) --- */}
+      {activeTab === 'logs' && (
+        <div className="animate-fade-in">
+          <ActivityLogs department={departmentName || ''} />
+        </div>
+      )}
+
       {/* --- MODAIS --- */}
       
       <VehicleModal 
@@ -373,6 +409,12 @@ export function DepartmentDetails() {
         onClose={() => setIsDriverModalOpen(false)}
         department={departmentName || ''}
         driverToEdit={editingDriver}
+      />
+
+      <MaintenanceModal
+        isOpen={isMaintenanceModalOpen}
+        onClose={() => setIsMaintenanceModalOpen(false)}
+        vehicle={maintenanceVehicle}
       />
     </div>
   );

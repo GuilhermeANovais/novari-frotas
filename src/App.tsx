@@ -5,6 +5,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { DepartmentDetails } from "./pages/DepartmentDetails";
 import { Header } from "./components/Header";
 import { Loader2 } from "lucide-react";
+import { Reports } from "./pages/Reports";
 
 // Componente para proteger rotas privadas (Dashboard, Detalhes, etc.)
 function PrivateRoute({ children }: { children: JSX.Element }) {
@@ -83,6 +84,15 @@ export default function App() {
               <DepartmentDetails />
             </PrivateRoute>
           } 
+        />
+
+        <Route
+          path="/relatorios"
+          element={
+            <PrivateRoute>
+              <Reports />
+            </PrivateRoute>
+          }
         />
 
         {/* Rota de Relatórios (Placeholder Futuro) */}

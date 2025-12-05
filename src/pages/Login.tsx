@@ -35,7 +35,7 @@ export function Login() {
           <img
             src={Logo}
             alt="Logótipo da Frota"
-            className="h-24 w-24 mx-auto mb-4 rounded-full object-cover shadow-md"
+            className="h-24 w-24 mx-auto mb-4 rounded-full object-cover"
           />
           <h1 className="text-3xl font-bold text-gray-800">Acesso ao Sistema</h1>
           <p className="text-gray-500 mt-2">Prefeitura Municipal de Murici</p>
