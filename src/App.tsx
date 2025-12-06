@@ -6,7 +6,8 @@ import { DepartmentDetails } from "./pages/DepartmentDetails";
 import { Reports } from "./pages/Reports";
 import { Header } from "./components/Header";
 import { Loader2 } from "lucide-react";
-import { Toaster } from 'sonner'; // <--- Importar Sonner
+import { Toaster, toast } from 'sonner';
+import { useEffect } from 'react';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
