@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth, AuthProvider } from "./contexts/AuthContext";
 import { Login } from "./pages/Login";
@@ -8,8 +9,8 @@ import { Header } from "./components/Header";
 import { Loader2 } from "lucide-react";
 import { Toaster } from 'sonner';
 
-// Layout Fixo: Ocupa 100% da altura da tela (h-screen) e não rola a janela (overflow-hidden)
-function PrivateRoute({ children }: { children: JSX.Element }) {
+// Componente para proteger rotas privadas
+function PrivateRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -29,14 +30,10 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
 
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-50 overflow-hidden">
-      {/* Header Fixo no topo */}
       <div className="flex-none z-10">
         <Header />
       </div>
-      
-      {/* Área Principal: Ocupa o espaço restante (flex-1) e rola internamente (overflow-y-auto) */}
       <main className="flex-1 overflow-y-auto scroll-smooth">
-        {/* Container centralizado para limitar a largura em telas muito grandes */}
         <div className="w-full h-full">
           {children}
         </div>
@@ -45,62 +42,25 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   );
 }
 
-function PublicRoute({ children }: { children: JSX.Element }) {
+// Componente para rotas públicas
+function PublicRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return null; 
-  }
-
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
   return children;
 }
 
 export default function App() {
   return (
     <AuthProvider>
+      {/* Removido o ThemeProvider, mantendo apenas o Toaster e as Rotas */}
       <Toaster richColors position="top-right" expand={true} />
-      
       <Routes>
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } 
-        />
-        
-        <Route 
-          path="/" 
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } 
-        />
-
-        <Route 
-          path="/departamentos/:nome" 
-          element={
-            <PrivateRoute>
-              <DepartmentDetails />
-            </PrivateRoute>
-          } 
-        />
-
-        <Route 
-          path="/relatorios" 
-          element={
-            <PrivateRoute>
-              <Reports />
-            </PrivateRoute>
-          } 
-        />
-
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/departamentos/:nome" element={<PrivateRoute><DepartmentDetails /></PrivateRoute>} />
+        <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

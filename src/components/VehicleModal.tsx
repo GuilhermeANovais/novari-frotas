@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Modal } from './Modal';
@@ -66,7 +66,7 @@ export function VehicleModal({
     reset, 
     formState: { errors } 
   } = useForm<VehicleFormData>({
-    resolver: zodResolver(vehicleSchema),
+    resolver: zodResolver(vehicleSchema) as any,
     defaultValues: {
       department: department,
       situation: 'Ativo',
@@ -127,7 +127,7 @@ export function VehicleModal({
     setImagePreview('');
   };
 
-  const onSubmit = async (data: VehicleFormData) => {
+  const onSubmit: SubmitHandler<VehicleFormData> = async (data) => {
     setIsSubmitting(true);
     try {
       let imageUrl = vehicleToEdit?.imageUrl || '';

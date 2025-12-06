@@ -12,7 +12,7 @@ import { ActivityLogs } from '../components/ActivityLogs';
 import { Vehicle, Driver } from '../types';
 import { 
   ArrowLeft, Plus, Search, Car, User, 
-  AlertTriangle, CheckCircle, Clock, History, Trash2, Eye 
+  AlertTriangle, CheckCircle, Clock, History, Trash2,
 } from 'lucide-react';
 
 // Imports para funcionalidade de Exclusão e Feedback

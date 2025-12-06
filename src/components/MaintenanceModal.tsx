@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Modal } from './Modal';
 import { Button } from './Button';
-import { Input } from './Input'; // O seu componente Input já aceita register
 import { Trash2, Wrench, DollarSign, Calendar } from 'lucide-react';
 import { db } from '../services/firebase';
 import { 
@@ -40,7 +39,7 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
     reset, 
     formState: { errors } 
   } = useForm<MaintenanceFormData>({
-    resolver: zodResolver(maintenanceSchema),
+    resolver: zodResolver(maintenanceSchema) as any,
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       partsCost: 0,
@@ -81,7 +80,7 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
-  const onSubmit = async (data: MaintenanceFormData) => {
+  const onSubmit: SubmitHandler<MaintenanceFormData> = async (data) => {
     if (!vehicle?.id) return;
     setIsSubmitting(true);
 

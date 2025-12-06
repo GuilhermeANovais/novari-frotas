@@ -65,7 +65,7 @@ export function Header() {
             </div>
             {/* Aumentei a fonte para text-xl (era text-base) e bold */}
             <span className="text-xl font-bold text-zinc-900 tracking-tight group-hover:text-black transition-colors">
-              GestorFrota
+              Murici
             </span>
           </Link>
           
