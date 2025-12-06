@@ -7,14 +7,15 @@ import { Input } from '../components/Input';
 import { VehicleModal } from '../components/VehicleModal';
 import { DriverModal } from '../components/DriverModal';
 import { MaintenanceModal } from '../components/MaintenanceModal';
+import { ViewVehicleModal } from '../components/ViewVehicleModal';
 import { ActivityLogs } from '../components/ActivityLogs';
 import { Vehicle, Driver } from '../types';
 import { 
   ArrowLeft, Plus, Search, Car, User, 
-  AlertTriangle, CheckCircle, Clock, History, Trash2 
+  AlertTriangle, CheckCircle, Clock, History, Trash2, Eye 
 } from 'lucide-react';
 
-// Imports para funcionalidade de Exclusão e Feedback
+// Imports para funcionalidade de Exclusão
 import { 
   collection, doc, deleteDoc, writeBatch, getDocs 
 } from 'firebase/firestore';
@@ -23,15 +24,14 @@ import { db, storage } from '../services/firebase';
 import { logActivity } from '../services/logger';
 import { toast } from 'sonner';
 
-// Utilitário para formatar datas (ex: 2023-10-05 -> 05/10/2023)
+// Utilitário para formatar datas
 const formatDate = (dateStr?: string) => {
   if (!dateStr) return 'N/D';
-  // Adiciona T00:00:00 para evitar problemas de fuso horário ao converter
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
 };
 
 export function DepartmentDetails() {
-  const { nome: departmentName } = useParams(); // Pega o nome da URL (/departamentos/SAUDE)
+  const { nome: departmentName } = useParams(); 
   const navigate = useNavigate();
   
   // --- Estados de Interface ---
@@ -47,23 +47,27 @@ export function DepartmentDetails() {
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [maintenanceVehicle, setMaintenanceVehicle] = useState<Vehicle | null>(null);
 
-  // --- Estados dos Filtros ---
+  // Estado para Visualização
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
+
+  // Estados dos Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [situationFilter, setSituationFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState(''); // 'ok' | 'warning' | 'error'
+  const [statusFilter, setStatusFilter] = useState(''); 
 
-  // --- Busca os dados usando Hooks (Reativos ao Firebase) ---
+  // --- Busca os dados (Hooks) ---
   const { vehicles, loading: loadingVehicles } = useVehicles(departmentName);
   const { drivers, loading: loadingDrivers } = useDrivers(departmentName);
 
   // --- Handlers de Abertura de Modal ---
   const handleOpenCreateVehicle = () => {
-    setEditingVehicle(null); // Modo criação
+    setEditingVehicle(null);
     setIsVehicleModalOpen(true);
   };
 
   const handleOpenEditVehicle = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle); // Modo edição
+    setEditingVehicle(vehicle);
     setIsVehicleModalOpen(true);
   };
 
@@ -72,13 +76,18 @@ export function DepartmentDetails() {
     setIsMaintenanceModalOpen(true);
   };
 
+  const handleOpenViewVehicle = (vehicle: Vehicle) => {
+    setViewingVehicle(vehicle);
+    setIsViewModalOpen(true);
+  };
+
   const handleOpenCreateDriver = () => {
-    setEditingDriver(null); // Modo criação
+    setEditingDriver(null);
     setIsDriverModalOpen(true);
   };
 
   const handleOpenEditDriver = (driver: Driver) => {
-    setEditingDriver(driver); // Modo edição
+    setEditingDriver(driver);
     setIsDriverModalOpen(true);
   };
 
@@ -89,7 +98,6 @@ export function DepartmentDetails() {
     if (!window.confirm(confirmMessage)) return;
 
     try {
-      // 1. Apagar subcoleção de manutenções
       const batch = writeBatch(db);
       const maintenanceSnap = await getDocs(collection(db, 'vehicles', vehicle.id, 'maintenanceRecords'));
       maintenanceSnap.forEach((doc) => {
@@ -97,7 +105,6 @@ export function DepartmentDetails() {
       });
       await batch.commit();
 
-      // 2. Apagar imagem do Storage (se existir)
       if (vehicle.imageUrl) {
         try {
           const imageRef = ref(storage, vehicle.imageUrl);
@@ -107,10 +114,8 @@ export function DepartmentDetails() {
         }
       }
 
-      // 3. Apagar o documento do veículo
       await deleteDoc(doc(db, 'vehicles', vehicle.id));
 
-      // 4. Log de Auditoria
       await logActivity(
         'delete_vehicle', 
         `Veículo excluído: ${vehicle.licensePlate} (${vehicle.model})`, 
@@ -131,14 +136,7 @@ export function DepartmentDetails() {
 
     try {
       await deleteDoc(doc(db, 'drivers', driver.id));
-      
-      await logActivity(
-        'delete_driver', 
-        `Motorista excluído: ${driver.name}`, 
-        driver.department, 
-        driver.id
-      );
-
+      await logActivity('delete_driver', `Motorista excluído: ${driver.name}`, driver.department, driver.id);
       toast.success(`Motorista ${driver.name} excluído.`);
     } catch (error) {
       console.error("Erro ao excluir motorista:", error);
@@ -151,13 +149,13 @@ export function DepartmentDetails() {
     if (!dateStr) return 'ok';
     const lastReview = new Date(dateStr + 'T00:00:00');
     const nextReview = new Date(lastReview);
-    nextReview.setMonth(nextReview.getMonth() + 6); // Regra: Revisão a cada 6 meses
+    nextReview.setMonth(nextReview.getMonth() + 6);
     const today = new Date();
     const daysLeft = (nextReview.getTime() - today.getTime()) / (1000 * 3600 * 24);
 
-    if (daysLeft < 0) return 'error'; // Atrasada
-    if (daysLeft <= 30) return 'warning'; // Próxima (30 dias)
-    return 'ok'; // Em dia
+    if (daysLeft < 0) return 'error';
+    if (daysLeft <= 30) return 'warning';
+    return 'ok';
   };
 
   const filteredVehicles = vehicles.filter(v => {
@@ -165,13 +163,10 @@ export function DepartmentDetails() {
     const matchesSearch = (v.licensePlate?.toLowerCase().includes(term) || 
                            v.model?.toLowerCase().includes(term));
     const matchesSituation = situationFilter ? v.situation === situationFilter : true;
-    
     let matchesStatus = true;
     if (statusFilter) {
-      const status = getVehicleStatus(v.lastReviewDate);
-      matchesStatus = status === statusFilter;
+      matchesStatus = getVehicleStatus(v.lastReviewDate) === statusFilter;
     }
-
     return matchesSearch && matchesSituation && matchesStatus;
   });
 
@@ -180,9 +175,8 @@ export function DepartmentDetails() {
     const expiration = new Date(dateStr + 'T00:00:00');
     const today = new Date();
     const daysLeft = (expiration.getTime() - today.getTime()) / (1000 * 3600 * 24);
-    
-    if (daysLeft < 0) return 'error'; // Expirada
-    if (daysLeft <= 45) return 'warning'; // A expirar (45 dias)
+    if (daysLeft < 0) return 'error';
+    if (daysLeft <= 45) return 'warning';
     return 'ok';
   };
 
@@ -190,28 +184,26 @@ export function DepartmentDetails() {
     const matchesSearch = d.name.toLowerCase().includes(searchTerm.toLowerCase());
     let matchesStatus = true;
     if (statusFilter) {
-      const status = getDriverStatus(d.licenseExpiration);
-      matchesStatus = status === statusFilter;
+      matchesStatus = getDriverStatus(d.licenseExpiration) === statusFilter;
     }
     return matchesSearch && matchesStatus;
   });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-      {/* Cabeçalho e Botão Voltar */}
+      {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-2">
           <button 
             onClick={() => navigate('/')} 
-            className="text-gray-500 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-200"
+            className="text-zinc-500 hover:text-zinc-900 transition-colors p-2 rounded-full hover:bg-zinc-100"
             title="Voltar para Dashboard"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">Gestão de {departmentName}</h1>
+          <h1 className="text-2xl font-bold text-zinc-900">Gestão de {departmentName}</h1>
         </div>
         
-        {/* Botão Adicionar (Visível apenas nas abas de Veículos e Motoristas) */}
         {activeTab !== 'logs' && (
           <div className="flex gap-2">
             <Button 
@@ -226,15 +218,15 @@ export function DepartmentDetails() {
       </div>
 
       {/* Navegação por Abas */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-zinc-200 mb-6">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => { setActiveTab('vehicles'); setStatusFilter(''); setSearchTerm(''); }}
             className={`
               pb-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors
               ${activeTab === 'vehicles' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                ? 'border-zinc-900 text-zinc-900' 
+                : 'border-transparent text-zinc-500 hover:text-zinc-700'}
             `}
           >
             <Car className="w-5 h-5 mr-2" />
@@ -245,8 +237,8 @@ export function DepartmentDetails() {
             className={`
               pb-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors
               ${activeTab === 'drivers' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                ? 'border-zinc-900 text-zinc-900' 
+                : 'border-transparent text-zinc-500 hover:text-zinc-700'}
             `}
           >
             <User className="w-5 h-5 mr-2" />
@@ -257,8 +249,8 @@ export function DepartmentDetails() {
             className={`
               pb-4 px-1 border-b-2 font-medium text-sm flex items-center transition-colors
               ${activeTab === 'logs' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                ? 'border-zinc-900 text-zinc-900' 
+                : 'border-transparent text-zinc-500 hover:text-zinc-700'}
             `}
           >
             <History className="w-5 h-5 mr-2" />
@@ -267,12 +259,11 @@ export function DepartmentDetails() {
         </nav>
       </div>
 
-      {/* Barra de Filtros (Oculta na aba Histórico) */}
+      {/* Barra de Filtros (Light Mode Only) */}
       {activeTab !== 'logs' && (
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Campo de Busca */}
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-zinc-200 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
             <Input 
               placeholder={activeTab === 'vehicles' ? "Buscar placa ou modelo..." : "Buscar nome do motorista..."}
               className="pl-10"
@@ -281,10 +272,9 @@ export function DepartmentDetails() {
             />
           </div>
 
-          {/* Filtro de Situação (Apenas Veículos) */}
           {activeTab === 'vehicles' ? (
             <select 
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white focus:outline-none focus:ring-2"
+              className="w-full px-4 py-2 border border-zinc-300 rounded-lg bg-white text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
               value={situationFilter}
               onChange={(e) => setSituationFilter(e.target.value)}
             >
@@ -294,13 +284,9 @@ export function DepartmentDetails() {
               <option value="Aguardando Peças">Aguardando Peças</option>
               <option value="Parado">Parado</option>
             </select>
-          ) : (
-             /* Espaço vazio para manter o grid alinhado na aba de motoristas */
-             <div className="hidden md:block"></div>
-          )}
+          ) : <div className="hidden md:block"></div>}
 
-          {/* Filtro de Status (Revisão/CNH) */}
-          <div className="flex bg-gray-100 p-1 rounded-lg">
+          <div className="flex bg-zinc-100 p-1 rounded-lg">
             {[
               { label: 'Todos', value: '' },
               { label: activeTab === 'vehicles' ? 'Atrasada' : 'Vencida', value: 'error' },
@@ -312,7 +298,7 @@ export function DepartmentDetails() {
                 onClick={() => setStatusFilter(opt.value)}
                 className={`
                   flex-1 text-sm font-medium rounded-md py-1 transition-all
-                  ${statusFilter === opt.value ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'}
+                  ${statusFilter === opt.value ? 'bg-white shadow text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}
                 `}
               >
                 {opt.label}
@@ -322,19 +308,13 @@ export function DepartmentDetails() {
         </div>
       )}
 
-      {/* --- CONTEÚDO DA ABA VEÍCULOS --- */}
+      {/* --- CONTEÚDO: VEÍCULOS --- */}
       {activeTab === 'vehicles' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-          {loadingVehicles ? (
-            <div className="col-span-full flex justify-center py-12">
-               <p className="text-gray-500">A carregar frota...</p>
-            </div>
-          ) : null}
-          
+          {loadingVehicles && <div className="col-span-full text-center py-12 text-zinc-500">A carregar frota...</div>}
           {!loadingVehicles && filteredVehicles.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
-               <Car className="w-12 h-12 mb-2 opacity-20" />
-               <p>Nenhum veículo encontrado com estes filtros.</p>
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-zinc-500 bg-white rounded-lg border border-dashed border-zinc-300">
+               <Car className="w-12 h-12 mb-2 opacity-20" /> <p>Nenhum veículo encontrado.</p>
             </div>
           )}
 
@@ -344,59 +324,69 @@ export function DepartmentDetails() {
             const StatusIcon = status === 'error' ? AlertTriangle : status === 'warning' ? Clock : CheckCircle;
 
             return (
-              <div key={vehicle.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col border border-gray-100">
-                {/* Imagem do Veículo */}
-                <div className="h-48 bg-gray-200 relative group">
+              <div key={vehicle.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col border border-zinc-200">
+                <div className="h-48 bg-zinc-200 relative group">
                   <img 
                     src={vehicle.imageUrl || "https://placehold.co/600x400/e2e8f0/cbd5e0?text=Sem+Foto"} 
                     alt={vehicle.model}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <span className="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-gray-700 shadow-sm border border-gray-100">
+                  <span className="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-zinc-700 shadow-sm border border-zinc-200">
                     {vehicle.situation}
                   </span>
                 </div>
-
-                {/* Corpo do Card */}
                 <div className="p-4 flex-grow">
-                  <h3 className="text-xl font-bold text-gray-800">{vehicle.licensePlate}</h3>
-                  <p className="text-gray-600 text-sm mb-4 font-medium">{vehicle.model}</p>
+                  <h3 className="text-xl font-bold text-zinc-900">{vehicle.licensePlate}</h3>
+                  <p className="text-zinc-600 text-sm mb-4 font-medium">{vehicle.model}</p>
                   
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between border-b border-gray-100 pb-1">
-                      <span className="text-gray-500">Motorista:</span>
-                      <span className="font-medium text-gray-800 truncate max-w-[150px]" title={vehicle.driverName}>
+                    <div className="flex justify-between border-b border-zinc-100 pb-1">
+                      <span className="text-zinc-500">Motorista:</span>
+                      <span className="font-medium text-zinc-800 truncate max-w-[150px]" title={vehicle.driverName}>
                         {vehicle.driverName || 'N/D'}
                       </span>
                     </div>
-                    <div className="flex justify-between border-b border-gray-100 pb-1">
-                      <span className="text-gray-500">KM Atual:</span>
-                      <span className="font-medium text-gray-800">{(vehicle.currentMileage || 0).toLocaleString()} km</span>
+                    <div className="flex justify-between border-b border-zinc-100 pb-1">
+                      <span className="text-zinc-500">KM Atual:</span>
+                      <span className="font-medium text-zinc-800">{(vehicle.currentMileage || 0).toLocaleString()} km</span>
                     </div>
                     <div className={`flex justify-between items-center pt-1 font-semibold ${statusColor}`}>
-                      <span className="flex items-center gap-1">
-                         <StatusIcon className="w-4 h-4" /> Revisão:
-                      </span>
+                      <span className="flex items-center gap-1"><StatusIcon className="w-4 h-4" /> Revisão:</span>
                       <span>{formatDate(vehicle.lastReviewDate)}</span>
                     </div>
                   </div>
                 </div>
                 
                 {/* Rodapé de Ações */}
-                <div className="bg-gray-50 p-3 border-t border-gray-100 flex justify-between items-center">
+                <div className="bg-zinc-50 p-3 border-t border-zinc-100 flex justify-between items-center">
                   <button 
                     onClick={() => handleDeleteVehicle(vehicle)}
-                    className="text-gray-500 hover:text-white hover:bg-red-600 transition-colors p-2 rounded-md"
+                    className="text-zinc-400 hover:text-white hover:bg-red-600 transition-colors p-2 rounded-md"
                     title="Excluir Veículo"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
 
                   <div className="flex gap-2">
-                    <button onClick={() => handleOpenEditVehicle(vehicle)} className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-md transition-colors">
+                    {/* Botão Detalhes */}
+                    <button 
+                      onClick={() => handleOpenViewVehicle(vehicle)}
+                      className="px-3 py-1.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900 rounded-md transition-colors shadow-sm"
+                    >
+                      Detalhes
+                    </button>
+
+                    <button 
+                      onClick={() => handleOpenEditVehicle(vehicle)} 
+                      className="px-3 py-1.5 text-sm font-medium text-zinc-700 bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
+                    >
                       Editar
                     </button>
-                    <button onClick={() => handleOpenMaintenance(vehicle)} className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors">
+                    
+                    <button 
+                      onClick={() => handleOpenMaintenance(vehicle)} 
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-zinc-900 hover:bg-black rounded-md transition-colors shadow-sm"
+                    >
                       Custos
                     </button>
                   </div>
@@ -407,42 +397,34 @@ export function DepartmentDetails() {
         </div>
       )}
 
-      {/* --- CONTEÚDO DA ABA MOTORISTAS --- */}
+      {/* --- CONTEÚDO: MOTORISTAS --- */}
       {activeTab === 'drivers' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-          {loadingDrivers ? (
-            <div className="col-span-full flex justify-center py-12">
-               <p className="text-gray-500">A carregar motoristas...</p>
-            </div>
-          ) : null}
-
+          {loadingDrivers && <div className="col-span-full text-center py-12 text-zinc-500">A carregar motoristas...</div>}
           {!loadingDrivers && filteredDrivers.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500 bg-white rounded-lg border border-dashed border-gray-300">
-               <User className="w-12 h-12 mb-2 opacity-20" />
-               <p>Nenhum motorista encontrado.</p>
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-zinc-500 bg-white rounded-lg border border-dashed border-zinc-300">
+               <User className="w-12 h-12 mb-2 opacity-20" /> <p>Nenhum motorista encontrado.</p>
             </div>
           )}
 
           {filteredDrivers.map((driver) => {
             const status = getDriverStatus(driver.licenseExpiration);
-            const statusBg = status === 'error' ? 'bg-red-50 border-red-200' : status === 'warning' ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-200';
-            const statusText = status === 'error' ? 'text-red-700' : status === 'warning' ? 'text-yellow-700' : 'text-gray-700';
+            const statusBg = status === 'error' ? 'bg-red-50 border-red-200' : status === 'warning' ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-zinc-200';
+            const statusText = status === 'error' ? 'text-red-700' : status === 'warning' ? 'text-yellow-700' : 'text-zinc-700';
 
             return (
               <div key={driver.id} className={`p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow ${statusBg} flex flex-col justify-between`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className={`text-lg font-bold ${statusText}`}>{driver.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">CNH: <span className="font-mono font-medium">{driver.licenseNumber}</span></p>
+                    <p className="text-sm text-zinc-500 mt-1">CNH: <span className="font-mono font-medium">{driver.licenseNumber}</span></p>
                   </div>
-                  <span className="px-2 py-1 bg-gray-200 rounded text-xs font-bold text-gray-600 uppercase">
-                    Cat. {driver.licenseCategory}
-                  </span>
+                  <span className="px-2 py-1 bg-zinc-100 rounded text-xs font-bold text-zinc-600 uppercase">Cat. {driver.licenseCategory}</span>
                 </div>
                 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200/50 text-sm">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-200/50 text-sm">
                   <div>
-                     <span className="text-gray-500 block text-xs">Validade:</span>
+                     <span className="text-zinc-500 block text-xs">Validade:</span>
                      <span className={`font-bold ${status === 'error' ? 'text-red-600' : status === 'warning' ? 'text-yellow-600' : 'text-green-600'}`}>
                         {formatDate(driver.licenseExpiration)}
                      </span>
@@ -451,14 +433,14 @@ export function DepartmentDetails() {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => handleDeleteDriver(driver)}
-                      className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                      className="text-zinc-400 hover:text-white hover:bg-red-600 transition-colors p-2 rounded-md"
                       title="Excluir Motorista"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                     <button 
                        onClick={() => handleOpenEditDriver(driver)}
-                       className="text-primary hover:text-green-800 font-medium hover:underline"
+                       className="px-3 py-1.5 text-sm font-medium text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-md transition-colors"
                     >
                        Editar
                     </button>
@@ -478,7 +460,6 @@ export function DepartmentDetails() {
       )}
 
       {/* --- MODAIS --- */}
-      
       <VehicleModal 
         isOpen={isVehicleModalOpen}
         onClose={() => setIsVehicleModalOpen(false)}
@@ -486,18 +467,22 @@ export function DepartmentDetails() {
         vehicleToEdit={editingVehicle}
         drivers={drivers}
       />
-
       <DriverModal
         isOpen={isDriverModalOpen}
         onClose={() => setIsDriverModalOpen(false)}
         department={departmentName || ''}
         driverToEdit={editingDriver}
       />
-
       <MaintenanceModal
         isOpen={isMaintenanceModalOpen}
         onClose={() => setIsMaintenanceModalOpen(false)}
         vehicle={maintenanceVehicle}
+      />
+      {/* Modal de Visualização (Detalhes) */}
+      <ViewVehicleModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        vehicle={viewingVehicle}
       />
     </div>
   );
