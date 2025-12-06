@@ -4,7 +4,7 @@ import { useAllData } from '../hooks/useAllData';
 import { KpiCardSkeleton } from '../components/Skeletons';
 import { 
   Building2, Car, Users, 
-  Ban, FileWarning, Activity 
+  Ban, FileWarning, Activity,
 } from 'lucide-react';
 
 export function Dashboard() {
@@ -59,7 +59,7 @@ export function Dashboard() {
       <div className="mb-4 flex items-baseline justify-between">
         <div>
           <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Visão Geral</h1>
-          <p className="text-xs text-zinc-500">Resumo operacional da frota municipal</p>
+          <p className="text-xs text-zinc-500">Resumo operacional da frota municipal de Murici/AL</p>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export function Dashboard() {
               title="Veículos" 
               value={vehicles.length} 
               icon={Car} 
-              colorClass="text-blue-600" 
+              colorClass="text-green-600" 
               bgClass="bg-blue-50"
               borderColor="border-blue-100"
             />
@@ -112,16 +112,16 @@ export function Dashboard() {
 
       {/* Título da Seção */}
       <div className="flex items-center gap-2 mb-3 shrink-0">
-        <Building2 className="w-4 h-4 text-zinc-400" />
-        <h2 className="text-sm font-bold text-zinc-700 uppercase tracking-wide">Departamentos</h2>
+        <Building2 className="w-4 h-4 text-pmm-900" />
+        <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wide">Departamentos</h2>
       </div>
       
       {/* Lista de Departamentos (Grid Denso) */}
       {/* Usa 'flex-1 overflow-y-auto' se quiser scroll apenas aqui, ou deixa natural */}
       <div className="flex-1 overflow-y-auto min-h-0 pb-4">
         {departmentsToShow.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg text-center shadow-sm border border-dashed border-zinc-300">
-             <Building2 className="w-10 h-10 text-zinc-300 mx-auto mb-2" />
+          <div className="bg-white p-8 rounded-lg text-center shadow-sm border border-dashed border-pmm-900">
+             <Building2 className="w-10 h-10 text-pmm-900 mx-auto mb-2" />
              <p className="text-zinc-500 text-sm font-medium">Nenhum departamento associado.</p>
           </div>
         ) : (
@@ -135,14 +135,14 @@ export function Dashboard() {
                 <div 
                   key={dept}
                   onClick={() => navigate(`/departamentos/${dept}`)}
-                  className="bg-white p-3 rounded-lg shadow-sm border border-zinc-200
+                  className="bg-white p-3 rounded-lg shadow-sm border border-pmm-900
                              hover:shadow-md hover:border-zinc-300 hover:-translate-y-0.5 
                              transition-all duration-200 cursor-pointer group flex flex-col justify-between h-24"
                 >
                   <div className="flex items-start justify-between">
                     <h3 className="text-sm font-bold text-zinc-900 group-hover:text-black line-clamp-1" title={dept}>{dept}</h3>
                     <div className="bg-zinc-50 p-1.5 rounded-full group-hover:bg-zinc-100 transition-colors border border-zinc-100">
-                      <Building2 className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-600" />
+                      <Building2 className="w-3.5 h-3.5 text-pmm-900 group-hover:text-pmm-900" />
                     </div>
                   </div>
                   
