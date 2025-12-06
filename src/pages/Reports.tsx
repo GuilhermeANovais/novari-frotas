@@ -12,24 +12,18 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { useAllData } from '../hooks/useAllData';
 import { Button } from '../components/Button';
-import { FileSpreadsheet, ArrowLeft } from 'lucide-react';
+import { Skeleton } from '../components/Skeleton'; // <--- Skeleton
+import { FileSpreadsheet, ArrowLeft, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner'; // <--- Toast
 
-// Registrar componentes do Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export function Reports() {
   const navigate = useNavigate();
   const { vehicles, loading } = useAllData();
 
-  // --- Processamento de Dados para o Gráfico ---
+  // --- Processamento de Dados ---
   const costsByDept: Record<string, number> = {};
   
   vehicles.forEach(v => {
@@ -43,149 +37,177 @@ export function Reports() {
 
   const chartData = {
     labels: chartLabels,
-    datasets: [
-      {
-        label: 'Custo Total (R$)',
-        data: chartValues,
-        backgroundColor: 'rgba(22, 163, 74, 0.7)', // green-600 com transparência
-        borderColor: 'rgba(22, 163, 74, 1)',
-        borderWidth: 1,
-      },
-    ],
+    datasets: [{
+      label: 'Custo Total (R$)',
+      data: chartValues,
+      backgroundColor: 'rgba(24, 24, 27, 0.8)', // Zinc-900 com transparência
+      borderColor: 'rgba(24, 24, 27, 1)',
+      borderWidth: 1,
+      borderRadius: 4,
+    }],
   };
 
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' as const },
-      title: { display: true, text: 'Gastos Totais por Departamento' },
+      legend: { display: false }, // Minimalista
+      title: { display: false },
     },
     scales: {
         y: {
-            ticks: {
-                // Formata o eixo Y como moeda
-                callback: (value: any) => `R$ ${value}`
-            }
-        }
+            grid: { color: '#f4f4f5' }, // Zinc-100
+            ticks: { callback: (value: any) => `R$ ${value}` }
+        },
+        x: { grid: { display: false } }
     }
   };
 
-  // --- Função de Exportação Excel (Atualizada para ExcelJS) ---
   const handleExportExcel = async () => {
-    if (vehicles.length === 0) return alert("Sem dados para exportar.");
+    if (vehicles.length === 0) return toast.warning("Sem dados para exportar.");
 
-    // 1. Criar Workbook e Worksheet
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Frota Completa');
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Frota Completa');
 
-    // 2. Definir Colunas e Cabeçalhos
-    worksheet.columns = [
-      { header: 'Placa', key: 'licensePlate', width: 15 },
-      { header: 'Modelo', key: 'model', width: 25 },
-      { header: 'Departamento', key: 'department', width: 20 },
-      { header: 'Situação', key: 'situation', width: 15 },
-      { header: 'Custo Total', key: 'totalCost', width: 15, style: { numFmt: '"R$"#,##0.00' } },
-      { header: 'KM Atual', key: 'currentMileage', width: 15 },
-      { header: 'Última Revisão', key: 'lastReviewDate', width: 15 },
-    ];
+      worksheet.columns = [
+        { header: 'Placa', key: 'licensePlate', width: 15 },
+        { header: 'Modelo', key: 'model', width: 25 },
+        { header: 'Departamento', key: 'department', width: 20 },
+        { header: 'Situação', key: 'situation', width: 15 },
+        { header: 'Custo Total', key: 'totalCost', width: 15, style: { numFmt: '"R$"#,##0.00' } },
+        { header: 'KM Atual', key: 'currentMileage', width: 15 },
+        { header: 'Última Revisão', key: 'lastReviewDate', width: 15 },
+      ];
 
-    // 3. Adicionar Linhas
-    vehicles.forEach(v => {
-      worksheet.addRow({
-        licensePlate: v.licensePlate,
-        model: v.model,
-        department: v.department,
-        situation: v.situation,
-        totalCost: v.totalCost || 0,
-        currentMileage: v.currentMileage || 0,
-        lastReviewDate: v.lastReviewDate ? new Date(v.lastReviewDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/D'
+      vehicles.forEach(v => {
+        worksheet.addRow({
+          licensePlate: v.licensePlate,
+          model: v.model,
+          department: v.department,
+          situation: v.situation,
+          totalCost: v.totalCost || 0,
+          currentMileage: v.currentMileage || 0,
+          lastReviewDate: v.lastReviewDate ? new Date(v.lastReviewDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/D'
+        });
       });
-    });
 
-    // 4. Estilizar Cabeçalho (Opcional, mas fica bonito)
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFEEEEEE' }
-    };
-
-    // 5. Gerar Buffer e Salvar
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, `relatorio_frota_${new Date().toISOString().split('T')[0]}.xlsx`);
+      worksheet.getRow(1).font = { bold: true };
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, `relatorio_frota_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      toast.success("Relatório gerado com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao gerar Excel.");
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-      
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-2">
           <button 
             onClick={() => navigate('/')} 
-            className="text-gray-500 hover:text-primary p-2 rounded-full hover:bg-gray-200"
+            className="text-zinc-500 hover:text-zinc-900 transition-colors p-2 rounded-full hover:bg-zinc-100"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">Relatórios e Custos</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900">Relatórios Financeiros</h1>
+            <p className="text-zinc-500 text-sm">Análise de custos e exportação de dados</p>
+          </div>
         </div>
         
-        <Button onClick={handleExportExcel} disabled={loading} className="w-auto">
-          <FileSpreadsheet className="w-5 h-5 mr-2" />
-          Exportar Excel
+        <Button onClick={handleExportExcel} disabled={loading} className="w-full md:w-auto">
+          <FileSpreadsheet className="w-4 h-4 mr-2" />
+          Baixar Relatório Excel
         </Button>
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-gray-500">Calculando estatísticas...</div>
+        // Loading State com Skeletons
+        <div className="space-y-8">
+           <div className="bg-white p-6 rounded-lg border border-zinc-200 shadow-sm h-[400px] flex flex-col gap-4">
+              <Skeleton className="h-8 w-48" />
+              <div className="flex items-end gap-4 h-full pb-4">
+                 <Skeleton className="w-full h-1/3" />
+                 <Skeleton className="w-full h-2/3" />
+                 <Skeleton className="w-full h-1/2" />
+                 <Skeleton className="w-full h-3/4" />
+                 <Skeleton className="w-full h-full" />
+              </div>
+           </div>
+           <div className="bg-white rounded-lg border border-zinc-200 h-64 p-6">
+              <div className="space-y-4">
+                 <Skeleton className="h-8 w-full" />
+                 <Skeleton className="h-8 w-full" />
+                 <Skeleton className="h-8 w-full" />
+              </div>
+           </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-8">
           
-          {/* Cartão do Gráfico */}
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+          {/* Gráfico */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
+             <div className="flex items-center justify-between mb-6">
+                <h3 className="font-semibold text-zinc-800 flex items-center gap-2">
+                   <BarChart3 className="w-5 h-5 text-zinc-500" />
+                   Custo Total por Departamento
+                </h3>
+             </div>
              <div className="h-[400px] w-full flex justify-center">
                 {Object.keys(costsByDept).length > 0 ? (
                     <Bar options={chartOptions} data={chartData} />
                 ) : (
-                    <p className="flex items-center justify-center text-gray-400">
-                        Sem dados financeiros registrados.
-                    </p>
+                    <div className="flex flex-col items-center justify-center text-zinc-400 h-full">
+                        <BarChart3 className="w-12 h-12 mb-2 opacity-20" />
+                        <p>Sem dados financeiros registrados.</p>
+                    </div>
                 )}
              </div>
           </div>
 
-          {/* Resumo em Tabela Simples */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100">
-            <div className="px-6 py-4 border-b bg-gray-50 font-semibold text-gray-700">
-                Detalhamento por Departamento
+          {/* Tabela de Resumo */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-zinc-200">
+            <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/50 font-semibold text-zinc-700 text-sm">
+                Detalhamento dos Custos
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-600">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                <table className="w-full text-sm text-left text-zinc-600">
+                    <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 border-b border-zinc-200">
                         <tr>
-                            <th className="px-6 py-3">Departamento</th>
-                            <th className="px-6 py-3 text-center">Qtd. Veículos</th>
-                            <th className="px-6 py-3 text-right">Custo Total</th>
+                            <th className="px-6 py-3 font-medium">Departamento</th>
+                            <th className="px-6 py-3 text-center font-medium">Qtd. Veículos</th>
+                            <th className="px-6 py-3 text-right font-medium">Custo Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         {chartLabels.map(dept => (
-                            <tr key={dept} className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 font-medium text-gray-900">{dept}</td>
+                            <tr key={dept} className="bg-white border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
+                                <td className="px-6 py-4 font-medium text-zinc-900">{dept}</td>
                                 <td className="px-6 py-4 text-center">
                                     {vehicles.filter(v => v.department === dept).length}
                                 </td>
-                                <td className="px-6 py-4 text-right font-bold text-green-700">
+                                <td className="px-6 py-4 text-right font-mono font-medium text-zinc-900">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(costsByDept[dept])}
                                 </td>
                             </tr>
                         ))}
+                        {/* Linha de Total Geral */}
+                        <tr className="bg-zinc-50 font-semibold text-zinc-900">
+                            <td className="px-6 py-4">TOTAL GERAL</td>
+                            <td className="px-6 py-4 text-center">{vehicles.length}</td>
+                            <td className="px-6 py-4 text-right font-mono">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(chartValues.reduce((a, b) => a + b, 0))}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
           </div>
-
         </div>
       )}
     </div>

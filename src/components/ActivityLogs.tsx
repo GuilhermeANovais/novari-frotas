@@ -58,7 +58,6 @@ export function ActivityLogs({ department }: { department: string }) {
       </div>
       <div className="divide-y divide-gray-100">
         {logs.map((log) => {
-          // Converter timestamp do Firestore para data legível
           const date = log.timestamp?.toDate ? log.timestamp.toDate() : new Date();
           
           return (

@@ -15,7 +15,7 @@ import {
   AlertTriangle, CheckCircle, Clock, History, Trash2, Eye 
 } from 'lucide-react';
 
-// Imports para funcionalidade de Exclusão
+// Imports para funcionalidade de Exclusão e Feedback
 import { 
   collection, doc, deleteDoc, writeBatch, getDocs 
 } from 'firebase/firestore';
@@ -47,7 +47,6 @@ export function DepartmentDetails() {
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
   const [maintenanceVehicle, setMaintenanceVehicle] = useState<Vehicle | null>(null);
 
-  // Estado para Visualização
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
 
@@ -91,13 +90,14 @@ export function DepartmentDetails() {
     setIsDriverModalOpen(true);
   };
 
-  // --- Lógica de Exclusão (Segurança) ---
+  // --- Lógica de Exclusão Segura ---
   const handleDeleteVehicle = async (vehicle: Vehicle) => {
     const confirmMessage = `ATENÇÃO: Você está prestes a excluir o veículo ${vehicle.licensePlate}.\n\nIsso apagará também todo o histórico de manutenções e a foto.\n\nTem certeza absoluta?`;
     
     if (!window.confirm(confirmMessage)) return;
 
     try {
+      // 1. Apagar subcoleção de manutenções (Firestore não apaga automaticamente)
       const batch = writeBatch(db);
       const maintenanceSnap = await getDocs(collection(db, 'vehicles', vehicle.id, 'maintenanceRecords'));
       maintenanceSnap.forEach((doc) => {
@@ -105,6 +105,7 @@ export function DepartmentDetails() {
       });
       await batch.commit();
 
+      // 2. Apagar imagem do Storage (se existir)
       if (vehicle.imageUrl) {
         try {
           const imageRef = ref(storage, vehicle.imageUrl);
@@ -114,8 +115,10 @@ export function DepartmentDetails() {
         }
       }
 
+      // 3. Apagar o documento do veículo
       await deleteDoc(doc(db, 'vehicles', vehicle.id));
 
+      // 4. Log de Auditoria
       await logActivity(
         'delete_vehicle', 
         `Veículo excluído: ${vehicle.licensePlate} (${vehicle.model})`, 
@@ -127,7 +130,7 @@ export function DepartmentDetails() {
 
     } catch (error) {
       console.error("Erro ao excluir veículo:", error);
-      toast.error("Ocorreu um erro ao tentar excluir.");
+      toast.error("Ocorreu um erro ao tentar excluir. Verifique o console.");
     }
   };
 
@@ -136,7 +139,14 @@ export function DepartmentDetails() {
 
     try {
       await deleteDoc(doc(db, 'drivers', driver.id));
-      await logActivity('delete_driver', `Motorista excluído: ${driver.name}`, driver.department, driver.id);
+      
+      await logActivity(
+        'delete_driver', 
+        `Motorista excluído: ${driver.name}`, 
+        driver.department, 
+        driver.id
+      );
+
       toast.success(`Motorista ${driver.name} excluído.`);
     } catch (error) {
       console.error("Erro ao excluir motorista:", error);
@@ -204,6 +214,7 @@ export function DepartmentDetails() {
           <h1 className="text-2xl font-bold text-zinc-900">Gestão de {departmentName}</h1>
         </div>
         
+        {/* Botão Adicionar */}
         {activeTab !== 'logs' && (
           <div className="flex gap-2">
             <Button 
@@ -259,14 +270,14 @@ export function DepartmentDetails() {
         </nav>
       </div>
 
-      {/* Barra de Filtros (Light Mode Only) */}
+      {/* Barra de Filtros (Oculta na aba Histórico) */}
       {activeTab !== 'logs' && (
         <div className="bg-white p-4 rounded-lg shadow-sm border border-zinc-200 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-zinc-400" />
+            <Search className="absolute left-2 top-2 h-5 w-5 text-zinc-400" />
             <Input 
               placeholder={activeTab === 'vehicles' ? "Buscar placa ou modelo..." : "Buscar nome do motorista..."}
-              className="pl-10"
+              className="pl-10 text-zinc-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -368,7 +379,6 @@ export function DepartmentDetails() {
                   </button>
 
                   <div className="flex gap-2">
-                    {/* Botão Detalhes */}
                     <button 
                       onClick={() => handleOpenViewVehicle(vehicle)}
                       className="px-3 py-1.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900 rounded-md transition-colors shadow-sm"
@@ -478,7 +488,6 @@ export function DepartmentDetails() {
         onClose={() => setIsMaintenanceModalOpen(false)}
         vehicle={maintenanceVehicle}
       />
-      {/* Modal de Visualização (Detalhes) */}
       <ViewVehicleModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}

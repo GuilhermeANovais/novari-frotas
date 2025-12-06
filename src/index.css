@@ -1,47 +1,61 @@
 @import "tailwindcss";
 
+@theme {
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
+  --color-pmm-800: #00008b;
+  --color-pmm-900: #16a34a
+}
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: 'Roboto', sans-serif;
+    
+    @apply bg-zinc-50 text-zinc-900 antialiased;
   }
 
-  /* Melhorar visibilidade de todos os inputs e selects */
+  /* Inputs sempre brancos com borda cinza */
   input, select, textarea {
-    @apply border-gray-300 bg-white text-gray-900 shadow-sm transition-all duration-200;
+    @apply bg-white border border-zinc-200 text-zinc-900 text-sm rounded-md shadow-sm transition-all duration-200 ease-in-out;
+    @apply placeholder:text-zinc-400;
   }
 
+  /* Foco elegante em preto (Zinc-900) */
   input:focus, select:focus, textarea:focus {
-    @apply border-green-500 ring-2 ring-green-100 outline-none;
+    @apply outline-none ring-2 ring-zinc-900 ring-offset-1 border-transparent;
   }
   
-  /* Garantir que labels sejam legíveis */
   label {
-    @apply font-semibold text-gray-700;
+    @apply text-xs font-medium text-zinc-600 uppercase tracking-wider mb-1.5 block;
   }
 }
 
-/* Scrollbar personalizada mais elegante */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* gray-300 */
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* gray-400 */
+  @apply bg-zinc-300 rounded-full hover:bg-zinc-400;
 }
 
-/* Animações */
 .animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: scale(0.99); }
+  to { opacity: 1; transform: scale(1); }
 }

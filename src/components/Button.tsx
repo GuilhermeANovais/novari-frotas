@@ -17,13 +17,10 @@ export const Button = ({
   ...props 
 }: ButtonProps) => {
   const variants = {
-    // Usando cores padrão do Tailwind (green-600/700) para garantir visibilidade
     primary: "bg-green-600 hover:bg-green-700 text-white shadow-sm border border-transparent focus:ring-green-500",
     
-    // Vermelho padrão para perigo
     danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm border border-transparent focus:ring-red-500",
     
-    // Outline com fundo branco para não ficar transparente sobre fundos cinzas
     outline: "bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 shadow-sm focus:ring-gray-500"
   };
 

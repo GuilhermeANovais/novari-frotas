@@ -1,84 +1,99 @@
 import { useState, FormEvent } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase'; // Importe do arquivo que configuramos antes
+import { auth } from '../services/firebase';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { Lock, Mail, AlertCircle } from 'lucide-react'; // Ícones modernos
-import Logo from '../assets/logo.jpg';
+import { toast } from 'sonner'; // Feedback moderno
+import Logo from '../assets/logo.jpg'; 
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // O redirecionamento será automático graças ao AuthContext que configuraremos no App.tsx
+      toast.success("Bem-vindo de volta!");
+      // O redirecionamento é automático pelo AuthContext
     } catch (err: any) {
       console.error(err);
-      setError('Credenciais inválidas. Verifique seu e-mail e senha.');
+      // Tratamento de erros comuns do Firebase
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        toast.error("E-mail ou senha incorretos.");
+      } else if (err.code === 'auth/too-many-requests') {
+        toast.error("Muitas tentativas. Tente novamente mais tarde.");
+      } else {
+        toast.error("Erro ao entrar. Verifique sua conexão.");
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-        <div className="text-center mb-8">
-          <img
-            src={Logo}
-            alt="Logótipo da Frota"
-            className="h-24 w-24 mx-auto mb-4 rounded-full object-cover"
-          />
-          <h1 className="text-3xl font-bold text-gray-800">Acesso ao Sistema</h1>
-          <p className="text-gray-500 mt-2">Prefeitura Municipal de Murici</p>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-sm border border-zinc-200">
+        
+        {/* Cabeçalho do Card */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="h-16 w-16 rounded-full overflow-hidden border border-zinc-100 shadow-sm mb-4">
+             <img
+                src={Logo}
+                alt="GestorFrota"
+                className="h-full w-full object-cover"
+             />
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">GestorFrota</h1>
+          <p className="text-zinc-500 text-sm mt-1">Entre para gerir a frota municipal</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="relative">
-            <Mail className="absolute left-3 top-9 h-5 w-5 text-gray-400" />
+        {/* Formulário */}
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-4">
             <Input
-              label="Email"
+              label="E-mail Corporativo"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              className="pl-10" // Padding extra para o ícone
+              placeholder="ex: admin@prefeitura.gov.br"
               required
+              autoComplete="email"
             />
-          </div>
 
-          <div className="relative">
-            <Lock className="absolute left-3 top-9 h-5 w-5 text-gray-400" />
-            <Input
-              label="Senha"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="pl-10"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md flex items-center text-sm">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-              {error}
+            <div className="space-y-1">
+              <Input
+                label="Senha"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+              />
+              <div className="flex justify-end">
+                <button type="button" className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors">
+                  Esqueceu a senha?
+                </button>
+              </div>
             </div>
-          )}
+          </div>
 
-          <Button type="submit" isLoading={loading}>
-            Entrar
+          <Button type="submit" isLoading={loading} className="w-full mt-2">
+            Entrar no Sistema
           </Button>
         </form>
+
+        {/* Rodapé */}
+        <div className="mt-8 text-center border-t border-zinc-100 pt-6">
+          <p className="text-xs text-zinc-400">
+            &copy; {new Date().getFullYear()} Prefeitura Municipal de Murici. <br/>
+            Sistema Interno de Gestão.
+          </p>
+        </div>
       </div>
     </div>
   );

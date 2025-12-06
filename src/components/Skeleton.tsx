@@ -1,0 +1,10 @@
+import { clsx } from "clsx";
+
+export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={clsx("animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-300", className)}
+      {...props}
+    />
+  );
+}
