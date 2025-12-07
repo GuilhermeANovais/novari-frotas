@@ -74,7 +74,6 @@ export function Dashboard() {
       <div className="mb-6 flex items-baseline justify-between shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Visão Geral</h1>
-          <p className="text-sm text-zinc-500 mt-1">Resumo operacional da frota municipal</p>
         </div>
       </div>
 
