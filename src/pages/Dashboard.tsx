@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAllData } from '../hooks/useAllData';
 import { KpiCardSkeleton } from '../components/Skeletons';
-import { 
-  Building2, Car, Users, 
-  Ban, FileWarning, Activity,
+import {
+  Car, Activity, Ban, FileWarning, 
+  Folder, Stethoscope, GraduationCap, HardHat, Shield, Landmark, Users, Baby, Tractor, LucideIcon 
 } from 'lucide-react';
 
 export function Dashboard() {
@@ -18,6 +18,20 @@ export function Dashboard() {
   const departmentsToShow = userProfile?.role === 'admin' 
     ? allDepartments 
     : userProfile?.departments || (userProfile?.department ? [userProfile.department] : []);
+
+  // --- CONFIGURAÇÃO DE ÍCONES ---
+  const getDepartmentIcon = (deptName: string): LucideIcon => {
+    const name = deptName.toUpperCase();
+    if (name.includes("SAUDE") || name.includes("HGDO")) return Stethoscope;
+    if (name.includes("SEMED") || name.includes("EDUC")) return GraduationCap;
+    if (name.includes("OBRAS") || name.includes("INFRA")) return HardHat;
+    if (name.includes("GCM") || name.includes("GUARD")) return Shield;
+    if (name.includes("SOCIAL")) return Users;
+    if (name.includes("TUTELAR")) return Baby;
+    if (name.includes("PMM")) return Landmark; 
+    if (name.includes("SEMASU")) return Tractor;
+    return Folder;
+  };
 
   // --- KPIs ---
   const overdueReviews = vehicles.filter(v => {
@@ -39,32 +53,33 @@ export function Dashboard() {
     return daysLeft <= 45;
   }).length;
 
-  // Cartão KPI Compacto
+  // Cartão KPI
   const KpiCard = ({ title, value, icon: Icon, colorClass, bgClass, borderColor }: any) => (
-    <div className={`bg-white px-4 py-3 rounded-lg shadow-sm border ${borderColor} flex items-center justify-between transition-all hover:shadow-md h-full`}>
+    <div className={`bg-white px-4 py-4 rounded-xl shadow-sm border ${borderColor} flex items-center justify-between transition-all hover:shadow-md h-full`}>
       <div>
-        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-0.5">{title}</p>
+        <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">{title}</p>
         <h3 className="text-2xl font-bold text-zinc-900 leading-none">{value}</h3>
       </div>
-      <div className={`p-2 rounded-full ${bgClass}`}>
+      <div className={`p-2.5 rounded-lg ${bgClass}`}>
         <Icon className={`w-5 h-5 ${colorClass}`} />
       </div>
     </div>
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 animate-fade-in h-full flex flex-col">
+    // AJUSTE PRINCIPAL AQUI: max-w-7xl e paddings iguais ao Header.tsx
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in h-full flex flex-col">
       
-      {/* Título Compacto */}
-      <div className="mb-4 flex items-baseline justify-between">
+      {/* Título e Subtítulo */}
+      <div className="mb-6 flex items-baseline justify-between shrink-0">
         <div>
-          <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Visão Geral</h1>
-          <p className="text-xs text-zinc-500">Resumo operacional da frota municipal de Murici/AL</p>
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Visão Geral</h1>
+          <p className="text-sm text-zinc-500 mt-1">Resumo operacional da frota municipal</p>
         </div>
       </div>
 
-      {/* Painel de KPIs (Grid de 4 colunas em telas maiores) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 shrink-0">
+      {/* Painel de KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 shrink-0">
         {loading ? (
            <>
              <KpiCardSkeleton />
@@ -78,7 +93,7 @@ export function Dashboard() {
               title="Veículos" 
               value={vehicles.length} 
               icon={Car} 
-              colorClass="text-green-600" 
+              colorClass="text-blue-600" 
               bgClass="bg-blue-50"
               borderColor="border-blue-100"
             />
@@ -111,49 +126,51 @@ export function Dashboard() {
       </div>
 
       {/* Título da Seção */}
-      <div className="flex items-center gap-2 mb-3 shrink-0">
-        <Building2 className="w-4 h-4 text-pmm-900" />
-        <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wide">Departamentos</h2>
+      <div className="flex items-center gap-2 mb-4 shrink-0 border-b border-zinc-200 pb-2">
+        <Folder className="w-5 h-5 text-zinc-400" />
+        <h2 className="text-sm font-bold text-zinc-700 uppercase tracking-wide">Departamentos</h2>
       </div>
       
-      {/* Lista de Departamentos (Grid Denso) */}
-      {/* Usa 'flex-1 overflow-y-auto' se quiser scroll apenas aqui, ou deixa natural */}
+      {/* Lista de Departamentos */}
       <div className="flex-1 overflow-y-auto min-h-0 pb-4">
         {departmentsToShow.length === 0 ? (
-          <div className="bg-white p-8 rounded-lg text-center shadow-sm border border-dashed border-pmm-900">
-             <Building2 className="w-10 h-10 text-pmm-900 mx-auto mb-2" />
-             <p className="text-zinc-500 text-sm font-medium">Nenhum departamento associado.</p>
+          <div className="bg-white p-12 rounded-xl text-center shadow-sm border border-dashed border-zinc-300">
+             <Folder className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
+             <p className="text-zinc-500 font-medium">Nenhum departamento associado.</p>
           </div>
         ) : (
-          // Grid ajustado: 2 cols (mobile), 3 cols (tablet), 4 cols (laptop), 5 cols (wide)
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-3">
+          // Grid alinhado com o de cima (gap-4 e colunas proporcionais)
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {departmentsToShow.sort().map((dept) => {
               const deptVehicles = vehicles.filter(v => v.department === dept).length;
               const deptDrivers = drivers.filter(d => d.department === dept).length;
+              const DepartmentIcon = getDepartmentIcon(dept);
 
               return (
                 <div 
                   key={dept}
                   onClick={() => navigate(`/departamentos/${dept}`)}
-                  className="bg-white p-3 rounded-lg shadow-sm border border-pmm-900
-                             hover:shadow-md hover:border-zinc-300 hover:-translate-y-0.5 
-                             transition-all duration-200 cursor-pointer group flex flex-col justify-between h-24"
+                  className="group bg-white p-5 rounded-xl shadow-sm border border-zinc-200
+                             hover:shadow-md hover:border-emerald-200 hover:ring-1 hover:ring-emerald-100
+                             transition-all duration-200 cursor-pointer flex items-center gap-5"
                 >
-                  <div className="flex items-start justify-between">
-                    <h3 className="text-sm font-bold text-zinc-900 group-hover:text-black line-clamp-1" title={dept}>{dept}</h3>
-                    <div className="bg-zinc-50 p-1.5 rounded-full group-hover:bg-zinc-100 transition-colors border border-zinc-100">
-                      <Building2 className="w-3.5 h-3.5 text-pmm-900 group-hover:text-pmm-900" />
-                    </div>
+                  {/* Ícone com Fundo Verde */}
+                  <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100/50 group-hover:scale-105 transition-transform duration-200">
+                    <DepartmentIcon className="w-6 h-6 text-emerald-600" />
                   </div>
                   
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex items-center gap-1 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100" title="Veículos">
-                      <Car className="w-3 h-3 text-zinc-500"/> 
-                      <span className="text-xs font-medium text-zinc-700">{loading ? '-' : deptVehicles}</span>
-                    </div>
-                    <div className="flex items-center gap-1 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100" title="Motoristas">
-                      <Users className="w-3 h-3 text-zinc-500"/> 
-                      <span className="text-xs font-medium text-zinc-700">{loading ? '-' : deptDrivers}</span>
+                  {/* Texto */}
+                  <div className="flex flex-col">
+                    <h3 className="text-base font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
+                      {dept}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium mt-1">
+                      <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200">
+                        {loading ? '-' : `${deptVehicles} veíc.`}
+                      </span>
+                      <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200">
+                        {loading ? '-' : `${deptDrivers} mot.`}
+                      </span>
                     </div>
                   </div>
                 </div>
