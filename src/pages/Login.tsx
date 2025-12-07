@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { toast } from 'sonner'; // Feedback moderno
+import { toast } from 'sonner';
 import Logo from '../assets/logo.jpg'; 
 
 export function Login() {
@@ -18,7 +18,6 @@ export function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Bem-vindo de volta!");
-      // O redirecionamento é automático pelo AuthContext
     } catch (err: any) {
       console.error(err);
       // Tratamento de erros comuns do Firebase
@@ -47,19 +46,17 @@ export function Login() {
                 className="h-full w-full object-cover"
              />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">GestorFrota</h1>
-          <p className="text-zinc-500 text-sm mt-1">Entre para gerir a frota municipal</p>
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Sistema de Gestão</h1>
         </div>
 
         {/* Formulário */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-4">
             <Input
-              label="E-mail Corporativo"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ex: admin@prefeitura.gov.br"
               required
               autoComplete="email"
             />
@@ -91,7 +88,7 @@ export function Login() {
         <div className="mt-8 text-center border-t border-zinc-100 pt-6">
           <p className="text-xs text-zinc-400">
             &copy; {new Date().getFullYear()} Prefeitura Municipal de Murici. <br/>
-            Sistema Interno de Gestão.
+            Sistema de Gestão Novari.
           </p>
         </div>
       </div>
