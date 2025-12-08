@@ -30,7 +30,7 @@ const formatDate = (dateStr?: string) => {
 };
 
 // Quantidade de itens carregados por vez no botão "Carregar Mais"
-const ITEMS_INCREMENT = 9;
+const ITEMS_INCREMENT = 50;
 
 export function DepartmentDetails() {
   const { nome: departmentName } = useParams(); 
