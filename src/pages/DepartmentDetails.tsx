@@ -12,7 +12,7 @@ import { ActivityLogs } from '../components/ActivityLogs';
 import { Vehicle, Driver } from '../types';
 import { 
   ArrowLeft, Plus, Search, Car, User, 
-  AlertTriangle, CheckCircle, Clock, History, Trash2, ChevronDown 
+  AlertTriangle, CheckCircle, Clock, History, Trash2, ChevronDown, FileText, 
 } from 'lucide-react';
 
 import { 
@@ -22,6 +22,7 @@ import { ref, deleteObject } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 import { logActivity } from '../services/logger';
 import { toast } from 'sonner';
+import { DocumentsModal } from '../components/DocumentsModal';
 
 // Utilitário para formatar datas
 const formatDate = (dateStr?: string) => {
@@ -57,6 +58,9 @@ export function DepartmentDetails() {
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
+
+  const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
+  const [docsVehicle, setDocsVehicle] = useState<Vehicle | null>(null);
 
   // Estados dos Filtros Extras
   const [situationFilter, setSituationFilter] = useState('');
@@ -144,6 +148,11 @@ export function DepartmentDetails() {
       console.error("Erro ao excluir motorista:", error);
       toast.error("Erro ao excluir motorista.");
     }
+  };
+
+  const handleOpenDocs = (vehicle: Vehicle) => { 
+    setDocsVehicle(vehicle); 
+    setIsDocsModalOpen(true); 
   };
 
   // --- Helpers de Status ---
@@ -354,6 +363,14 @@ export function DepartmentDetails() {
                       </button>
 
                       <button 
+                        onClick={() => handleOpenDocs(vehicle)} 
+                        className="px-3 py-1.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:text-blue-600 rounded-md transition-colors shadow-sm flex items-center gap-1"
+                        title="Documentos (GED)"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+
+                      <button 
                         onClick={() => handleOpenEditVehicle(vehicle)} 
                         className="px-3 py-1.5 text-sm font-medium text-zinc-700 bg-zinc-200 hover:bg-zinc-300 rounded-md transition-colors"
                       >
@@ -491,6 +508,11 @@ export function DepartmentDetails() {
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         vehicle={viewingVehicle}
+      />
+      <DocumentsModal
+        isOpen={isDocsModalOpen}
+        onClose={() => setIsDocsModalOpen(false)}
+        vehicle={docsVehicle}
       />
     </div>
   );

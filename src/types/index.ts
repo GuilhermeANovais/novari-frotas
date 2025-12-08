@@ -49,3 +49,13 @@ export interface UserProfile {
   department: string;
   departments?: string[];
 }
+
+export interface VehicleDocument {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+  uploadedBy: string;
+  createdAt: any;
+}
