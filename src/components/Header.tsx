@@ -77,7 +77,7 @@ export function Header() {
                <img src={Logo} alt="Logo" className="h-full w-full object-cover" />
             </div>
             <span className="hidden md:block text-lg font-bold text-zinc-900 tracking-tight group-hover:text-black">
-              Sistema de Gestão Novari
+              Sistema de Gestão Novare
             </span>
           </Link>
         </div>

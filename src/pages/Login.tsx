@@ -57,6 +57,7 @@ export function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="E-mail"
               required
               autoComplete="email"
             />
@@ -88,7 +89,7 @@ export function Login() {
         <div className="mt-8 text-center border-t border-zinc-100 pt-6">
           <p className="text-xs text-zinc-400">
             &copy; {new Date().getFullYear()} Prefeitura Municipal de Murici. <br/>
-            Sistema de Gestão Novari.
+            Sistema de Gestão Novare.
           </p>
         </div>
       </div>
