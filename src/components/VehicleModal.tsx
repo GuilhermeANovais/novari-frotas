@@ -142,7 +142,7 @@ export function VehicleModal({
 
       const vehicleData = {
         ...data,
-        ano: data.ano || null, // Garante que vai como null se vazio
+        ano: data.ano || null,
         updatedAt: serverTimestamp()
       };
 
@@ -190,7 +190,7 @@ export function VehicleModal({
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
-        <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-zinc-300 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 dark:border-zinc-700">
+        <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-zinc-300 rounded-lg bg-zinc-50 dark:bg-zinc-100 dark:border-zinc-400">
           {imagePreview ? (
             <div className="relative w-full h-48 group">
               <img src={imagePreview} alt="Preview" className="w-full h-full object-contain rounded-md" />
@@ -203,9 +203,9 @@ export function VehicleModal({
               </button>
             </div>
           ) : (
-            <label className="cursor-pointer flex flex-col items-center hover:bg-zinc-100 dark:hover:bg-zinc-800 p-6 rounded-md transition-colors w-full">
+            <label className="cursor-pointer flex flex-col items-center hover:bg-zinc-100 dark:hover:bg-zinc-200 p-6 rounded-md transition-colors w-full">
               <Upload className="w-10 h-10 text-zinc-400 mb-3" />
-              <span className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">Clique para adicionar foto</span>
+              <span className="text-sm text-zinc-800 dark:text-zinc-400 font-medium">Clique para adicionar foto</span>
               <span className="text-xs text-zinc-400 mt-1">JPG, PNG (Max 5MB)</span>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
             </label>
@@ -229,10 +229,10 @@ export function VehicleModal({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
            <div>
-             <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">Situação *</label>
+             <label className="block text-xs font-medium text-zinc-200 dark:text-zinc-600 uppercase tracking-wider mb-1.5">Situação *</label>
              <select 
                {...register('situation')}
-               className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-sm shadow-sm focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:outline-none"
+               className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-300 rounded-md bg-white dark:bg-white text-sm shadow-sm focus:ring-2 focus:ring-zinc-200 dark:focus:ring-zinc-100 focus:outline-none"
              >
                <option value="Ativo">Ativo</option>
                <option value="Em Manutenção">Em Manutenção</option>
@@ -243,10 +243,10 @@ export function VehicleModal({
            </div>
            
            <div>
-             <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">Motorista Responsável</label>
+             <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-600 uppercase tracking-wider mb-1.5">Motorista Responsável</label>
              <select 
                {...register('driverName')}
-               className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-sm shadow-sm focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:outline-none"
+               className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-300 rounded-md bg-white dark:bg-white text-sm shadow-sm focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:outline-none"
              >
                <option value="">Selecione...</option>
                {drivers.map(d => (
@@ -269,7 +269,7 @@ export function VehicleModal({
            <Input label="Chassi" {...register('chassis')} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-zinc-50 dark:bg-zinc-800/30 p-4 rounded-lg border border-zinc-100 dark:border-zinc-800">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-zinc-50 dark:bg-zinc-100/50 p-4 rounded-lg border border-zinc-100 dark:border-zinc-300">
            <Input label="Última Revisão" type="date" {...register('lastReviewDate')} />
            <Input label="KM Atual" type="number" {...register('currentMileage')} error={errors.currentMileage?.message} />
            <Input label="Próxima Troca (KM)" type="number" {...register('nextChangeMileage')} error={errors.nextChangeMileage?.message} />
@@ -280,11 +280,11 @@ export function VehicleModal({
             <textarea 
                 {...register('details')}
                 rows={3}
-                className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900 text-sm shadow-sm focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 focus:outline-none"
+                className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-300 rounded-md bg-white dark:bg-white text-sm shadow-sm focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-100 focus:outline-none"
             ></textarea>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-400">
           <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
