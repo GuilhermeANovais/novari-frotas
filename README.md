@@ -101,6 +101,7 @@ src/
 - [ ] Controle de Abastecimento
 - [ ] Gestão de Multas
 - [X] Gestão Eletrônica de Documentos (GED)
+- [ ] Localização em tempo real do veículo
 
 ---
 
