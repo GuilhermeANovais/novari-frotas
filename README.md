@@ -58,7 +58,7 @@ Antes de começar, certifique-se de ter instalado:
 
 1. **Clone o repositório**
    ```bash
-   git clone [https://github.com/seu-usuario/novari-frotas.git](https://github.com/seu-usuario/novari-frotas.git)
+   git clone https://github.com/GuilhermeANovais/novari-frotas.git
    cd novari-frotas
    ```
 2. **Instale as depedências**
