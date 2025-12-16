@@ -147,21 +147,21 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
     >
       <div className="space-y-6">
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase">Peças</p>
-            <p className="text-lg font-bold text-blue-800 dark:text-blue-200">{formatCurrency(totalParts)}</p>
+          <div className="bg-blue-50 dark:bg-white p-3 rounded-lg border border-blue-100 dark:border-blue-900">
+            <p className="text-xs text-black dark:text-black font-bold uppercase">Peças</p>
+            <p className="text-lg font-bold text-blue-800 dark:text-black">{formatCurrency(totalParts)}</p>
           </div>
-          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-800">
-            <p className="text-xs text-green-600 dark:text-green-400 font-bold uppercase">Mão de Obra</p>
-            <p className="text-lg font-bold text-green-800 dark:text-green-200">{formatCurrency(totalLabor)}</p>
+          <div className="bg-green-50 dark:bg-white p-3 rounded-lg border border-green-100 dark:border-green-800">
+            <p className="text-xs text-green-900 dark:text-green-900 font-bold uppercase">Mão de Obra</p>
+            <p className="text-lg font-bold text-black dark:text-black">{formatCurrency(totalLabor)}</p>
           </div>
-          <div className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 font-bold uppercase">Total Geral</p>
-            <p className="text-lg font-bold text-zinc-800 dark:text-zinc-200">{formatCurrency(grandTotal)}</p>
+          <div className="bg-zinc-100 dark:bg-zinc-100 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
+            <p className="text-xs text-zinc-900 dark:text-zinc-900 font-bold uppercase">Total Geral</p>
+            <p className="text-lg font-bold text-zinc-800 dark:text-zinc-900">{formatCurrency(grandTotal)}</p>
           </div>
         </div>
-        <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-          <div className="bg-zinc-50 dark:bg-zinc-900 px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 font-medium text-sm text-zinc-700 dark:text-zinc-300">
+        <div className="border border-zinc-200 dark:border-zinc-500 rounded-lg overflow-hidden">
+          <div className="bg-zinc-50 dark:bg-zinc-200 px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-900">
             Últimos Serviços
           </div>
           <div className="max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -194,32 +194,32 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
             )}
           </div>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-zinc-50 dark:bg-zinc-900/30 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 space-y-4">
-          <h4 className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-zinc-50 dark:bg-white p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 space-y-4">
+          <h4 className="font-bold text-zinc-700 dark:text-zinc-900 flex items-center gap-2">
             <Wrench className="w-4 h-4" /> Registrar Nova Manutenção
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-               <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">Data</label>
+               <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-800 uppercase tracking-wider mb-1.5">Data</label>
                <div className="relative">
                  <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-zinc-400" />
                  <input 
                    type="date" 
                    {...register('date')}
-                   className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                   className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-zinc-50 border border-zinc-200 dark:border-zinc-500 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
                  />
                </div>
                {errors.date && <span className="text-xs text-red-500 mt-1">{errors.date.message}</span>}
             </div>
             
             <div>
-               <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">Descrição</label>
+               <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-800 uppercase tracking-wider mb-1.5">Descrição</label>
                <input 
                  type="text" 
                  placeholder="Ex: Troca de óleo e filtros"
                  {...register('description')}
-                 className="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                 className="w-full px-3 py-2 text-sm bg-white dark:bg-zinc-50 border border-zinc-200 dark:border-zinc-500 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
                />
                {errors.description && <span className="text-xs text-red-500 mt-1">{errors.description.message}</span>}
             </div>
@@ -227,7 +227,7 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-               <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">Peças (R$)</label>
+               <label className="block text-xs font-medium text-zinc-50 dark:text-zinc-400 uppercase tracking-wider mb-1.5">Peças (R$)</label>
                <div className="relative">
                  <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-zinc-400" />
                  <input 
@@ -235,7 +235,7 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
                    step="0.01"
                    placeholder="0,00"
                    {...register('partsCost')}
-                   className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                   className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-zinc-50 border border-zinc-200 dark:border-zinc-500 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
                  />
                </div>
                {errors.partsCost && <span className="text-xs text-red-500 mt-1">{errors.partsCost.message}</span>}
@@ -250,7 +250,7 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
                    step="0.01"
                    placeholder="0,00"
                    {...register('laborCost')}
-                   className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                   className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-zinc-50 border border-zinc-200 dark:border-zinc-500 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
                  />
                </div>
                {errors.laborCost && <span className="text-xs text-red-500 mt-1">{errors.laborCost.message}</span>}
