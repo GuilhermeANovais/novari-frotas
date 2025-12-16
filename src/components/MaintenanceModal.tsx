@@ -169,14 +169,14 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
               <p className="p-8 text-center text-zinc-400 text-sm">Nenhum registro encontrado.</p>
             ) : (
               records.map(rec => (
-                <div key={rec.id} className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 flex justify-between items-start group transition-colors">
+                <div key={rec.id} className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-100 flex justify-between items-start group transition-colors">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-zinc-800 dark:text-zinc-200 text-sm">
+                      <span className="font-bold text-zinc-800 dark:text-zinc-900 text-sm">
                         {new Date(rec.date + 'T00:00:00').toLocaleDateString('pt-BR')}
                       </span>
-                      <span className="text-zinc-400 text-xs">•</span>
-                      <span className="font-medium text-zinc-800 dark:text-zinc-200 text-sm">{rec.description}</span>
+                      <span className="text-zinc-900 text-xs">•</span>
+                      <span className="font-medium text-zinc-800 dark:text-zinc-900 text-sm">{rec.description}</span>
                     </div>
                     <div className="text-xs text-zinc-500">
                       Peças: {formatCurrency(rec.partsCost)} | M. Obra: {formatCurrency(rec.laborCost)}
@@ -184,7 +184,7 @@ export function MaintenanceModal({ isOpen, onClose, vehicle }: MaintenanceModalP
                   </div>
                   <button 
                     onClick={() => handleDelete(rec.id, rec.partsCost, rec.laborCost)}
-                    className="text-zinc-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1"
+                    className="text-red-700 hover:text-red-600 dark:hover:text-red-500 transition-colors p-1"
                     title="Excluir registro"
                   >
                     <Trash2 className="w-4 h-4" />
